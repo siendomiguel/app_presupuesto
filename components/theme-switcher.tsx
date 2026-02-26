@@ -8,7 +8,9 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Laptop, Moon, Sun } from "lucide-react";
+import Laptop from "lucide-react/dist/esm/icons/laptop"
+import Moon from "lucide-react/dist/esm/icons/moon"
+import Sun from "lucide-react/dist/esm/icons/sun"
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 

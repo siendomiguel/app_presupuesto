@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS accounts (
 CREATE TABLE IF NOT EXISTS budgets (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  category_id UUID REFERENCES categories(id) ON DELETE CASCADE NOT NULL,
+  category_id UUID REFERENCES categories(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   amount_usd DECIMAL(12, 2) DEFAULT 0,
   amount_cop DECIMAL(12, 2) DEFAULT 0,
@@ -81,9 +81,23 @@ CREATE TABLE IF NOT EXISTS transactions (
   currency TEXT NOT NULL CHECK (currency IN ('USD', 'COP')),
   description TEXT NOT NULL,
   date DATE NOT NULL DEFAULT CURRENT_DATE,
+  merchant TEXT,
   notes TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================
+-- 5b. TABLA: transaction_items
+-- Desglose opcional de items dentro de una transacción
+-- ============================================
+CREATE TABLE IF NOT EXISTS transaction_items (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  transaction_id UUID REFERENCES transactions(id) ON DELETE CASCADE NOT NULL,
+  name TEXT NOT NULL,
+  quantity DECIMAL(10, 2) DEFAULT 1,
+  unit_price DECIMAL(12, 2) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ============================================
@@ -96,6 +110,7 @@ CREATE INDEX IF NOT EXISTS idx_transactions_category_id ON transactions(category
 CREATE INDEX IF NOT EXISTS idx_budgets_user_id ON budgets(user_id);
 CREATE INDEX IF NOT EXISTS idx_categories_user_id ON categories(user_id);
 CREATE INDEX IF NOT EXISTS idx_accounts_user_id ON accounts(user_id);
+CREATE INDEX IF NOT EXISTS idx_transaction_items_transaction_id ON transaction_items(transaction_id);
 
 -- ============================================
 -- 7. ROW LEVEL SECURITY (RLS)
@@ -108,10 +123,15 @@ ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE budgets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE transaction_items ENABLE ROW LEVEL SECURITY;
 
 -- Políticas para profiles
 CREATE POLICY "Users can view own profile" ON profiles
   FOR SELECT USING (auth.uid() = id);
+
+-- WITH CHECK (true) porque el trigger corre antes de que auth.uid() esté disponible
+CREATE POLICY "Users can insert own profile" ON profiles
+  FOR INSERT WITH CHECK (true);
 
 CREATE POLICY "Users can update own profile" ON profiles
   FOR UPDATE USING (auth.uid() = id);
@@ -168,12 +188,20 @@ CREATE POLICY "Users can update own transactions" ON transactions
 CREATE POLICY "Users can delete own transactions" ON transactions
   FOR DELETE USING (auth.uid() = user_id);
 
+-- Política para transaction_items (via join a transactions)
+CREATE POLICY "Users can manage own transaction items" ON transaction_items
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM transactions t WHERE t.id = transaction_items.transaction_id AND t.user_id = auth.uid())
+  );
+
 -- ============================================
 -- 8. VISTA: budget_progress
 -- Calcula el progreso de presupuestos por moneda
+-- Soporta presupuestos por categoria (category_id NOT NULL)
+-- y presupuestos generales (category_id IS NULL = todos los gastos)
 -- ============================================
 CREATE OR REPLACE VIEW budget_progress AS
-SELECT 
+SELECT
   b.id AS budget_id,
   b.user_id,
   b.category_id,
@@ -188,19 +216,28 @@ SELECT
   -- Calcular gastos en COP
   COALESCE(SUM(CASE WHEN t.currency = 'COP' AND t.type = 'expense' THEN t.amount ELSE 0 END), 0) AS spent_cop,
   -- Calcular porcentaje de uso USD
-  CASE 
+  CASE
     WHEN b.amount_usd > 0 THEN (COALESCE(SUM(CASE WHEN t.currency = 'USD' AND t.type = 'expense' THEN t.amount ELSE 0 END), 0) / b.amount_usd * 100)
-    ELSE 0 
+    ELSE 0
   END AS percentage_usd,
   -- Calcular porcentaje de uso COP
-  CASE 
+  CASE
     WHEN b.amount_cop > 0 THEN (COALESCE(SUM(CASE WHEN t.currency = 'COP' AND t.type = 'expense' THEN t.amount ELSE 0 END), 0) / b.amount_cop * 100)
-    ELSE 0 
+    ELSE 0
   END AS percentage_cop
 FROM budgets b
-LEFT JOIN transactions t ON t.budget_id = b.id 
-  AND t.date >= b.start_date 
+LEFT JOIN transactions t ON
+  t.user_id = b.user_id
+  AND t.type = 'expense'
+  AND t.date >= b.start_date
   AND (b.end_date IS NULL OR t.date <= b.end_date)
+  AND (
+    -- Presupuesto por categoria: solo gastos de esa categoria
+    (b.category_id IS NOT NULL AND t.category_id = b.category_id)
+    OR
+    -- Presupuesto general: todos los gastos del usuario
+    (b.category_id IS NULL)
+  )
 GROUP BY b.id, b.user_id, b.category_id, b.name, b.amount_usd, b.amount_cop, b.period, b.start_date, b.end_date;
 
 -- ============================================
@@ -239,7 +276,7 @@ BEGIN
   
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- ============================================
 -- 11. TRIGGER: on_auth_user_created

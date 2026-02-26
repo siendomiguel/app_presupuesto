@@ -143,6 +143,32 @@ export interface Database {
                     updated_at?: string
                 }
             }
+            transaction_items: {
+                Row: {
+                    id: string
+                    transaction_id: string
+                    name: string
+                    quantity: number
+                    unit_price: number
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    transaction_id: string
+                    name: string
+                    quantity?: number
+                    unit_price: number
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    transaction_id?: string
+                    name?: string
+                    quantity?: number
+                    unit_price?: number
+                    created_at?: string
+                }
+            }
             transactions: {
                 Row: {
                     id: string

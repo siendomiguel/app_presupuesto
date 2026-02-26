@@ -1,32 +1,41 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import {
-  LayoutDashboard,
-  ArrowUpDown,
-  Target,
-  PieChart,
-  Settings,
-  CreditCard,
-  LogOut,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react"
+import LayoutDashboard from "lucide-react/dist/esm/icons/layout-dashboard"
+import ArrowUpDown from "lucide-react/dist/esm/icons/arrow-up-down"
+import Target from "lucide-react/dist/esm/icons/target"
+import PieChart from "lucide-react/dist/esm/icons/pie-chart"
+import Settings from "lucide-react/dist/esm/icons/settings"
+import CreditCard from "lucide-react/dist/esm/icons/credit-card"
+import LogOut from "lucide-react/dist/esm/icons/log-out"
+import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left"
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right"
 import { useState } from "react"
+import { usePathname, useRouter } from "next/navigation"
+import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
+import { createClient } from "@/lib/supabase/client"
 
 const navItems = [
-  { label: "Dashboard", icon: LayoutDashboard, active: true },
-  { label: "Transacciones", icon: ArrowUpDown, active: false },
-  { label: "Presupuestos", icon: Target, active: false },
-  { label: "Reportes", icon: PieChart, active: false },
-  { label: "Tarjetas", icon: CreditCard, active: false },
-  { label: "Ajustes", icon: Settings, active: false },
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+  { label: "Transacciones", icon: ArrowUpDown, href: "/transactions" },
+  { label: "Presupuestos", icon: Target, href: "/budgets" },
+  { label: "Reportes", icon: PieChart, href: "/reports" },
+  { label: "Tarjetas", icon: CreditCard, href: "/cards" },
+  { label: "Ajustes", icon: Settings, href: "/settings" },
 ]
 
 export function SidebarNav() {
   const [collapsed, setCollapsed] = useState(false)
-  const [activeItem, setActiveItem] = useState("Dashboard")
+  const pathname = usePathname()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push("/sign-in")
+  }
 
   return (
     <aside
@@ -35,11 +44,12 @@ export function SidebarNav() {
         collapsed ? "w-[72px]" : "w-[260px]"
       )}
     >
-      <div className={cn("flex items-center gap-2 px-5 h-16 border-b border-border", collapsed && "justify-center px-0")}>
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
-          <span className="text-sm font-bold text-primary-foreground">F</span>
-        </div>
-        {!collapsed && <span className="text-lg font-bold text-foreground tracking-tight">Fintrack</span>}
+      <div className={cn("flex items-center gap-2 px-5 h-16 border-b border-border", collapsed && "justify-center px-2")}>
+        {collapsed ? (
+          <Image src="/Logo.png" alt="Fintrack" width={36} height={36} className="shrink-0" />
+        ) : (
+          <Image src="/Logo texto.png" alt="Fintrack - Tu presupuesto bajo control" width={180} height={40} className="shrink-0 object-contain" />
+        )}
       </div>
 
       <Button
@@ -54,28 +64,32 @@ export function SidebarNav() {
 
       <nav className="flex-1 py-4 px-3">
         <ul className="flex flex-col gap-1">
-          {navItems.map((item) => (
-            <li key={item.label}>
-              <button
-                onClick={() => setActiveItem(item.label)}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  activeItem === item.label
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                  collapsed && "justify-center px-0"
-                )}
-              >
-                <item.icon className="h-5 w-5 shrink-0" />
-                {!collapsed && <span>{item.label}</span>}
-              </button>
-            </li>
-          ))}
+          {navItems.map((item) => {
+            const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
+            return (
+              <li key={item.label}>
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-accent text-accent-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    collapsed && "justify-center px-0"
+                  )}
+                >
+                  <item.icon className="h-5 w-5 shrink-0" />
+                  {!collapsed && <span>{item.label}</span>}
+                </Link>
+              </li>
+            )
+          })}
         </ul>
       </nav>
 
       <div className="border-t border-border p-3">
         <button
+          onClick={handleLogout}
           className={cn(
             "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors",
             collapsed && "justify-center px-0"

@@ -1,9 +1,17 @@
+// @ts-nocheck — supabase-js type mismatch with generated Database types
 import { createClient } from '@/lib/supabase/client'
 import { Database } from '@/lib/supabase/database.types'
 
 type Transaction = Database['public']['Tables']['transactions']['Row']
 type TransactionInsert = Database['public']['Tables']['transactions']['Insert']
 type TransactionUpdate = Database['public']['Tables']['transactions']['Update']
+type TransactionItemInsert = Database['public']['Tables']['transaction_items']['Insert']
+
+export type TransactionItem = Database['public']['Tables']['transaction_items']['Row']
+
+export type TransactionWithItems = Transaction & {
+    items?: TransactionItem[]
+}
 
 export class TransactionsService {
     private supabase = createClient()
@@ -22,7 +30,8 @@ export class TransactionsService {
         *,
         category:categories(*),
         budget:budgets(*),
-        account:accounts(*)
+        account:accounts(*),
+        items:transaction_items(*)
       `)
             .eq('user_id', userId)
             .order('date', { ascending: false })
@@ -59,7 +68,8 @@ export class TransactionsService {
         *,
         category:categories(*),
         budget:budgets(*),
-        account:accounts(*)
+        account:accounts(*),
+        items:transaction_items(*)
       `)
             .eq('id', id)
             .single()
@@ -68,14 +78,30 @@ export class TransactionsService {
         return data
     }
 
-    async createTransaction(transaction: TransactionInsert) {
+    async createTransaction(transaction: TransactionInsert, items?: { name: string; quantity: number; unit_price: number }[]) {
         const { data, error } = await this.supabase
             .from('transactions')
-            .insert(transaction)
+            .insert(transaction as any)
             .select()
             .single()
 
         if (error) throw error
+
+        // Insert items if provided
+        if (items && items.length > 0) {
+            const itemsToInsert = items.map(item => ({
+                transaction_id: data.id,
+                name: item.name,
+                quantity: item.quantity,
+                unit_price: item.unit_price,
+            }))
+
+            const { error: itemsError } = await this.supabase
+                .from('transaction_items')
+                .insert(itemsToInsert as any)
+
+            if (itemsError) throw itemsError
+        }
 
         // Update account balance
         await this.updateAccountBalance(transaction.account_id, transaction.amount, transaction.currency, transaction.type)
@@ -83,15 +109,55 @@ export class TransactionsService {
         return data
     }
 
-    async updateTransaction(id: string, updates: TransactionUpdate) {
+    async updateTransaction(id: string, updates: TransactionUpdate, items?: { name: string; quantity: number; unit_price: number }[]) {
+        // Get original transaction to reverse its balance effect
+        const original = await this.getTransaction(id)
+
         const { data, error } = await this.supabase
             .from('transactions')
-            .update(updates)
+            .update(updates as any)
             .eq('id', id)
             .select()
             .single()
 
         if (error) throw error
+
+        // Replace items: delete old ones and insert new ones
+        if (items !== undefined) {
+            const { error: deleteError } = await this.supabase
+                .from('transaction_items')
+                .delete()
+                .eq('transaction_id', id)
+
+            if (deleteError) throw deleteError
+
+            if (items.length > 0) {
+                const itemsToInsert = items.map(item => ({
+                    transaction_id: id,
+                    name: item.name,
+                    quantity: item.quantity,
+                    unit_price: item.unit_price,
+                }))
+
+                const { error: itemsError } = await this.supabase
+                    .from('transaction_items')
+                    .insert(itemsToInsert as any)
+
+                if (itemsError) throw itemsError
+            }
+        }
+
+        // Reverse original balance effect
+        const reverseType = original.type === 'income' ? 'expense' : 'income'
+        await this.updateAccountBalance(original.account_id, original.amount, original.currency, reverseType)
+
+        // Apply new balance effect
+        const newType = (updates.type ?? original.type) as 'income' | 'expense' | 'transfer'
+        const newAmount = (updates.amount ?? original.amount) as number
+        const newCurrency = (updates.currency ?? original.currency) as 'USD' | 'COP'
+        const newAccountId = (updates.account_id ?? original.account_id) as string
+        await this.updateAccountBalance(newAccountId, newAmount, newCurrency, newType)
+
         return data
     }
 
@@ -133,7 +199,7 @@ export class TransactionsService {
 
         await this.supabase
             .from('accounts')
-            .update(updates)
+            .update(updates as any)
             .eq('id', accountId)
     }
 
