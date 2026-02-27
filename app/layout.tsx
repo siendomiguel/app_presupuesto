@@ -4,6 +4,7 @@ import { Inter, DM_Sans } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import { UserProvider } from '@/lib/context/user-context'
 import { Toaster } from '@/components/ui/sonner'
+import { Analytics } from '@vercel/analytics/react'
 
 import './globals.css'
 
@@ -37,6 +38,7 @@ export default function RootLayout({
           <UserProvider>
             {children}
             <Toaster richColors position="bottom-right" />
+            <Analytics />
           </UserProvider>
         </ThemeProvider>
       </body>
