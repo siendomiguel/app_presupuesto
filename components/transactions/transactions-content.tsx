@@ -10,16 +10,22 @@ import { TransactionFilters } from "@/components/transactions/transaction-filter
 import { TransactionFormDialog } from "@/components/forms/transaction-form-dialog"
 import { DeleteConfirmationDialog } from "@/components/forms/delete-confirmation-dialog"
 import { CSVImportDialog } from "@/components/forms/csv-import-dialog"
+import { MergeTransactionsDialog } from "@/components/forms/merge-transactions-dialog"
 import { transactionsService } from "@/lib/services/transactions"
 import { Button } from "@/components/ui/button"
 import Plus from "lucide-react/dist/esm/icons/plus"
 import Upload from "lucide-react/dist/esm/icons/upload"
+import ListChecks from "lucide-react/dist/esm/icons/list-checks"
+import Merge from "lucide-react/dist/esm/icons/merge"
+import X from "lucide-react/dist/esm/icons/x"
 import { toast } from "sonner"
 import { Database } from "@/lib/supabase/database.types"
+import type { TransactionItem } from "@/lib/services/transactions"
 
 type Transaction = Database['public']['Tables']['transactions']['Row'] & {
     category?: Database['public']['Tables']['categories']['Row']
     account?: Database['public']['Tables']['accounts']['Row']
+    items?: TransactionItem[]
 }
 
 export function TransactionsContent() {
@@ -67,6 +73,74 @@ export function TransactionsContent() {
     const [deleting, setDeleting] = useState(false)
     const [csvImportOpen, setCsvImportOpen] = useState(false)
 
+    // Selection / merge state
+    const [selectionMode, setSelectionMode] = useState(false)
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+    const [mergeDialogOpen, setMergeDialogOpen] = useState(false)
+
+    const toggleSelect = (id: string) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev)
+            if (next.has(id)) next.delete(id)
+            else next.add(id)
+            return next
+        })
+    }
+
+    const exitSelectionMode = () => {
+        setSelectionMode(false)
+        setSelectedIds(new Set())
+    }
+
+    const selectedTransactions = useMemo(() =>
+        filteredTransactions.filter(tx => selectedIds.has(tx.id)),
+        [filteredTransactions, selectedIds]
+    )
+
+    const handleMergeAttempt = () => {
+        if (selectedTransactions.length < 2) {
+            toast.error("Selecciona al menos 2 transacciones para agrupar")
+            return
+        }
+
+        const first = selectedTransactions[0]
+
+        // Validate same date
+        const dates = new Set(selectedTransactions.map(tx => tx.date))
+        if (dates.size > 1) {
+            toast.error("Las transacciones deben tener la misma fecha para agruparlas")
+            return
+        }
+
+        // Validate same category
+        const categories = new Set(selectedTransactions.map(tx => tx.category_id ?? "null"))
+        if (categories.size > 1) {
+            toast.error("Las transacciones deben tener la misma categoria para agruparlas")
+            return
+        }
+
+        // Validate same account
+        const accounts = new Set(selectedTransactions.map(tx => tx.account_id))
+        if (accounts.size > 1) {
+            toast.error("Las transacciones deben tener la misma cuenta para agruparlas")
+            return
+        }
+
+        // Validate same type
+        const types = new Set(selectedTransactions.map(tx => tx.type))
+        if (types.size > 1) {
+            toast.error("Las transacciones deben ser del mismo tipo para agruparlas")
+            return
+        }
+
+        setMergeDialogOpen(true)
+    }
+
+    const handleMergeSuccess = () => {
+        refetch()
+        exitSelectionMode()
+    }
+
     const handleEdit = (tx: Transaction) => {
         setEditingTransaction(tx)
         setFormOpen(true)
@@ -111,14 +185,37 @@ export function TransactionsContent() {
                     </p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => setCsvImportOpen(true)} className="gap-1.5 flex-1 sm:flex-initial">
-                        <Upload className="h-4 w-4" />
-                        <span className="sm:inline">Importar CSV</span>
-                    </Button>
-                    <Button onClick={() => { setEditingTransaction(null); setFormOpen(true) }} className="gap-1.5 flex-1 sm:flex-initial">
-                        <Plus className="h-4 w-4" />
-                        <span className="sm:inline">Nueva transaccion</span>
-                    </Button>
+                    {!selectionMode ? (
+                        <>
+                            <Button variant="outline" onClick={() => setSelectionMode(true)} className="gap-1.5 flex-1 sm:flex-initial">
+                                <ListChecks className="h-4 w-4" />
+                                <span>Seleccionar</span>
+                            </Button>
+                            <Button variant="outline" onClick={() => setCsvImportOpen(true)} className="gap-1.5 flex-1 sm:flex-initial">
+                                <Upload className="h-4 w-4" />
+                                <span className="hidden sm:inline">Importar CSV</span>
+                            </Button>
+                            <Button onClick={() => { setEditingTransaction(null); setFormOpen(true) }} className="gap-1.5 flex-1 sm:flex-initial">
+                                <Plus className="h-4 w-4" />
+                                <span className="sm:inline">Nueva</span>
+                            </Button>
+                        </>
+                    ) : (
+                        <>
+                            <Button variant="outline" onClick={exitSelectionMode} className="gap-1.5 flex-1 sm:flex-initial">
+                                <X className="h-4 w-4" />
+                                <span>Cancelar</span>
+                            </Button>
+                            <Button
+                                onClick={handleMergeAttempt}
+                                disabled={selectedIds.size < 2}
+                                className="gap-1.5 flex-1 sm:flex-initial"
+                            >
+                                <Merge className="h-4 w-4" />
+                                <span>Agrupar{selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}</span>
+                            </Button>
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -146,7 +243,23 @@ export function TransactionsContent() {
                 loading={loading}
                 onEdit={handleEdit}
                 onDelete={setDeleteTarget}
+                selectionMode={selectionMode}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelect}
             />
+
+            {/* Floating selection bar on mobile */}
+            {selectionMode && selectedIds.size > 0 && (
+                <div className="fixed bottom-4 left-4 right-4 md:hidden z-50">
+                    <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card p-3 shadow-lg">
+                        <span className="text-sm font-medium">{selectedIds.size} seleccionada{selectedIds.size !== 1 ? "s" : ""}</span>
+                        <Button size="sm" onClick={handleMergeAttempt} disabled={selectedIds.size < 2} className="gap-1.5">
+                            <Merge className="h-4 w-4" />
+                            Agrupar
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             <TransactionFormDialog
                 open={formOpen}
@@ -169,6 +282,16 @@ export function TransactionsContent() {
                 onOpenChange={setCsvImportOpen}
                 onSuccess={refetch}
             />
+
+            {user && (
+                <MergeTransactionsDialog
+                    open={mergeDialogOpen}
+                    onOpenChange={setMergeDialogOpen}
+                    transactions={selectedTransactions}
+                    userId={user.id}
+                    onSuccess={handleMergeSuccess}
+                />
+            )}
         </>
     )
 }

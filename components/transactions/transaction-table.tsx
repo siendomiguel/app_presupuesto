@@ -17,6 +17,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Checkbox } from "@/components/ui/checkbox"
 import MoreHorizontal from "lucide-react/dist/esm/icons/more-horizontal"
 import Pencil from "lucide-react/dist/esm/icons/pencil"
 import Trash2 from "lucide-react/dist/esm/icons/trash-2"
@@ -52,9 +53,12 @@ interface TransactionTableProps {
     loading: boolean
     onEdit: (transaction: Transaction) => void
     onDelete: (transaction: Transaction) => void
+    selectionMode?: boolean
+    selectedIds?: Set<string>
+    onToggleSelect?: (id: string) => void
 }
 
-export function TransactionTable({ transactions, loading, onEdit, onDelete }: TransactionTableProps) {
+export function TransactionTable({ transactions, loading, onEdit, onDelete, selectionMode, selectedIds, onToggleSelect }: TransactionTableProps) {
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
 
     const toggleRow = (id: string) => {
@@ -92,19 +96,30 @@ export function TransactionTable({ transactions, loading, onEdit, onDelete }: Tr
                 const isIncome = tx.type === "income"
                 const hasItems = tx.items && tx.items.length > 0
                 const isExpanded = expandedRows.has(tx.id)
+                const isSelected = selectedIds?.has(tx.id)
                 return (
                     <div
                         key={tx.id}
                         className={cn(
                             "rounded-lg border border-border bg-card p-3",
-                            hasItems && "cursor-pointer"
+                            hasItems && !selectionMode && "cursor-pointer",
+                            selectionMode && "cursor-pointer",
+                            isSelected && "ring-2 ring-primary/50 bg-primary/5"
                         )}
-                        onClick={hasItems ? () => toggleRow(tx.id) : undefined}
+                        onClick={selectionMode ? () => onToggleSelect?.(tx.id) : hasItems ? () => toggleRow(tx.id) : undefined}
                     >
                         <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
-                                    {hasItems && (
+                                    {selectionMode && (
+                                        <Checkbox
+                                            checked={isSelected}
+                                            onCheckedChange={() => onToggleSelect?.(tx.id)}
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="mt-0.5 shrink-0"
+                                        />
+                                    )}
+                                    {!selectionMode && hasItems && (
                                         <ChevronRight className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", isExpanded && "rotate-90")} />
                                     )}
                                     <span className="font-medium truncate">{tx.description}</span>
@@ -191,6 +206,7 @@ export function TransactionTable({ transactions, loading, onEdit, onDelete }: Tr
             <Table>
                 <TableHeader>
                     <TableRow>
+                        {selectionMode && <TableHead className="w-[40px]"></TableHead>}
                         <TableHead className="w-[30px]"></TableHead>
                         <TableHead>Fecha</TableHead>
                         <TableHead>Descripcion</TableHead>
@@ -206,9 +222,27 @@ export function TransactionTable({ transactions, loading, onEdit, onDelete }: Tr
                         const isIncome = tx.type === "income"
                         const hasItems = tx.items && tx.items.length > 0
                         const isExpanded = expandedRows.has(tx.id)
+                        const isSelected = selectedIds?.has(tx.id)
                         return (
                             <>
-                                <TableRow key={tx.id} className={hasItems ? "cursor-pointer" : undefined} onClick={hasItems ? () => toggleRow(tx.id) : undefined}>
+                                <TableRow
+                                    key={tx.id}
+                                    className={cn(
+                                        hasItems && !selectionMode && "cursor-pointer",
+                                        selectionMode && "cursor-pointer",
+                                        isSelected && "bg-primary/5"
+                                    )}
+                                    onClick={selectionMode ? () => onToggleSelect?.(tx.id) : hasItems ? () => toggleRow(tx.id) : undefined}
+                                >
+                                    {selectionMode && (
+                                        <TableCell className="px-2">
+                                            <Checkbox
+                                                checked={isSelected}
+                                                onCheckedChange={() => onToggleSelect?.(tx.id)}
+                                                onClick={(e) => e.stopPropagation()}
+                                            />
+                                        </TableCell>
+                                    )}
                                     <TableCell className="px-2">
                                         {hasItems && (
                                             <ChevronRight className={cn("h-4 w-4 text-muted-foreground transition-transform", isExpanded && "rotate-90")} />
@@ -267,7 +301,7 @@ export function TransactionTable({ transactions, loading, onEdit, onDelete }: Tr
                                 </TableRow>
                                 {hasItems && isExpanded && (
                                     <TableRow key={`${tx.id}-items`} className="bg-muted/30 hover:bg-muted/30">
-                                        <TableCell colSpan={8} className="py-2 px-4">
+                                        <TableCell colSpan={selectionMode ? 9 : 8} className="py-2 px-4">
                                             <div className="ml-6 space-y-1">
                                                 <div className="grid grid-cols-[1fr_60px_90px_90px] gap-2 text-[10px] uppercase tracking-wider text-muted-foreground font-medium pb-1 border-b border-border/50">
                                                     <span>Item</span>
