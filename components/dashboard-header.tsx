@@ -51,7 +51,12 @@ const mobileNavItems = [
   { label: "Ajustes", icon: Settings, href: "/settings" },
 ]
 
-export function DashboardHeader() {
+interface DashboardHeaderProps {
+  menuOpen?: boolean
+  onMenuOpenChange?: (open: boolean) => void
+}
+
+export function DashboardHeader({ menuOpen: menuOpenProp, onMenuOpenChange }: DashboardHeaderProps = {}) {
   const { user } = useUser()
   const pathname = usePathname()
   const router = useRouter()
@@ -62,8 +67,10 @@ export function DashboardHeader() {
   // Transaction dialog state
   const [txDialogOpen, setTxDialogOpen] = useState(false)
 
-  // Mobile menu state
-  const [menuOpen, setMenuOpen] = useState(false)
+  // Mobile menu state (use prop if provided, otherwise local state)
+  const [menuOpenLocal, setMenuOpenLocal] = useState(false)
+  const menuOpen = menuOpenProp ?? menuOpenLocal
+  const setMenuOpen = onMenuOpenChange ?? setMenuOpenLocal
 
   // Notifications state
   const [notifOpen, setNotifOpen] = useState(false)
