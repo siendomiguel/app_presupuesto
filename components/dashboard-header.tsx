@@ -33,6 +33,7 @@ import Target from "lucide-react/dist/esm/icons/target"
 import PieChart from "lucide-react/dist/esm/icons/pie-chart"
 import Settings from "lucide-react/dist/esm/icons/settings"
 import CreditCard from "lucide-react/dist/esm/icons/credit-card"
+import Package from "lucide-react/dist/esm/icons/package"
 import BellOff from "lucide-react/dist/esm/icons/bell-off"
 import Link from "next/link"
 import Image from "next/image"
@@ -45,6 +46,7 @@ import { TransactionFormDialog } from "@/components/forms/transaction-form-dialo
 const mobileNavItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
   { label: "Transacciones", icon: ArrowUpDown, href: "/transactions" },
+  { label: "Items", icon: Package, href: "/items" },
   { label: "Presupuestos", icon: Target, href: "/budgets" },
   { label: "Reportes", icon: PieChart, href: "/reports" },
   { label: "Tarjetas", icon: CreditCard, href: "/cards" },

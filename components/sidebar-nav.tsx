@@ -7,6 +7,7 @@ import Target from "lucide-react/dist/esm/icons/target"
 import PieChart from "lucide-react/dist/esm/icons/pie-chart"
 import Settings from "lucide-react/dist/esm/icons/settings"
 import CreditCard from "lucide-react/dist/esm/icons/credit-card"
+import Package from "lucide-react/dist/esm/icons/package"
 import LogOut from "lucide-react/dist/esm/icons/log-out"
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left"
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right"
@@ -20,6 +21,7 @@ import { createClient } from "@/lib/supabase/client"
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
   { label: "Transacciones", icon: ArrowUpDown, href: "/transactions" },
+  { label: "Items", icon: Package, href: "/items" },
   { label: "Presupuestos", icon: Target, href: "/budgets" },
   { label: "Reportes", icon: PieChart, href: "/reports" },
   { label: "Tarjetas", icon: CreditCard, href: "/cards" },

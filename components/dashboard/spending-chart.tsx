@@ -28,7 +28,7 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
           <span
             className="h-2 w-2 rounded-full"
             style={{
-              backgroundColor: entry.dataKey === "ingresos" ? "hsl(158, 64%, 42%)" : "hsl(199, 89%, 48%)",
+              backgroundColor: entry.dataKey === "ingresos" ? "hsl(158, 64%, 42%)" : "hsl(0, 72%, 51%)",
             }}
           />
           <span className="text-muted-foreground capitalize">{entry.dataKey}:</span>
@@ -158,7 +158,7 @@ export function SpendingChart() {
           <ChartContainer
             config={{
               ingresos: { label: "Ingresos", color: "hsl(158, 64%, 42%)" },
-              gastos: { label: "Gastos", color: "hsl(199, 89%, 48%)" },
+              gastos: { label: "Gastos", color: "hsl(0, 72%, 51%)" },
             }}
             className="h-[280px] w-full"
           >
@@ -170,8 +170,8 @@ export function SpendingChart() {
                     <stop offset="95%" stopColor="hsl(158, 64%, 42%)" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="fillGastos" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0} />
+                    <stop offset="5%" stopColor="hsl(0, 72%, 51%)" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="hsl(0, 72%, 51%)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
@@ -201,7 +201,7 @@ export function SpendingChart() {
                 <Area
                   type="monotone"
                   dataKey="gastos"
-                  stroke="hsl(199, 89%, 48%)"
+                  stroke="hsl(0, 72%, 51%)"
                   strokeWidth={2}
                   fill="url(#fillGastos)"
                 />
