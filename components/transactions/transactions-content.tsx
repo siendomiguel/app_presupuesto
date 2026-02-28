@@ -264,10 +264,15 @@ export function TransactionsContent() {
                 <div className="fixed bottom-4 left-4 right-4 md:hidden z-50">
                     <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card p-3 shadow-lg">
                         <span className="text-sm font-medium">{selectedIds.size} seleccionada{selectedIds.size !== 1 ? "s" : ""}</span>
-                        <Button size="sm" onClick={handleMergeAttempt} disabled={selectedIds.size < 2} className="gap-1.5">
-                            <Merge className="h-4 w-4" />
-                            Agrupar
-                        </Button>
+                        <div className="flex gap-2">
+                            <Button size="sm" variant="outline" onClick={() => { setSelectionMode(false); setSelectedIds(new Set()) }}>
+                                Cancelar
+                            </Button>
+                            <Button size="sm" onClick={handleMergeAttempt} disabled={selectedIds.size < 2} className="gap-1.5">
+                                <Merge className="h-4 w-4" />
+                                Agrupar
+                            </Button>
+                        </div>
                     </div>
                 </div>
             )}
