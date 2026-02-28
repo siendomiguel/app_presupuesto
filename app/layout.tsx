@@ -15,8 +15,13 @@ export const metadata: Metadata = {
   title: 'Fintrack - Seguimiento de Gastos y Presupuestos',
   description: 'Controla tus finanzas personales con seguimiento de gastos, presupuestos y reportes visuales. Soporte multi-moneda USD/COP.',
   icons: {
-    icon: '/Logo.png',
-    apple: '/Logo.png',
+    icon: '/icon-192x192.png',
+    apple: '/icon-192x192.png',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Fintrack',
   },
 }
 
@@ -34,6 +39,11 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body className={`${inter.variable} ${dmSans.variable} font-sans antialiased`}>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js')})}`,
+          }}
+        />
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <UserProvider>
             {children}

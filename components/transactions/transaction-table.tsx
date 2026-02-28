@@ -86,15 +86,114 @@ export function TransactionTable({ transactions, loading, onEdit, onDelete }: Tr
         )
     }
 
-    return (
-        <div className="rounded-md border border-border">
+    const renderMobileCards = () => (
+        <div className="md:hidden space-y-2">
+            {transactions.map((tx) => {
+                const isIncome = tx.type === "income"
+                const hasItems = tx.items && tx.items.length > 0
+                const isExpanded = expandedRows.has(tx.id)
+                return (
+                    <div
+                        key={tx.id}
+                        className={cn(
+                            "rounded-lg border border-border bg-card p-3",
+                            hasItems && "cursor-pointer"
+                        )}
+                        onClick={hasItems ? () => toggleRow(tx.id) : undefined}
+                    >
+                        <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                    {hasItems && (
+                                        <ChevronRight className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", isExpanded && "rotate-90")} />
+                                    )}
+                                    <span className="font-medium truncate">{tx.description}</span>
+                                    {hasItems && (
+                                        <span className="inline-flex items-center gap-0.5 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground shrink-0">
+                                            <ListOrdered className="h-3 w-3" />
+                                            {tx.items!.length}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
+                                    <span>{format(parseLocalDate(tx.date), "dd MMM yyyy", { locale: es })}</span>
+                                    {tx.category?.name && (
+                                        <>
+                                            <span className="text-border">·</span>
+                                            <span className="truncate">{tx.category.name}</span>
+                                        </>
+                                    )}
+                                    {tx.account?.name && (
+                                        <>
+                                            <span className="text-border">·</span>
+                                            <span className="truncate">{tx.account.name}</span>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                                <div className="text-right">
+                                    <div className={cn(
+                                        "font-semibold tabular-nums text-sm",
+                                        isIncome ? "text-[hsl(158,64%,42%)]" : "text-foreground"
+                                    )}>
+                                        {isIncome ? "+" : "-"}{formatCurrency(tx.amount, tx.currency)}
+                                    </div>
+                                    <Badge variant="outline" className={cn("text-[10px] mt-0.5", typeColors[tx.type])}>
+                                        {typeLabels[tx.type]}
+                                    </Badge>
+                                </div>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => onEdit(tx)} className="gap-2">
+                                            <Pencil className="h-4 w-4" />
+                                            Editar
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onDelete(tx)} className="gap-2 text-destructive">
+                                            <Trash2 className="h-4 w-4" />
+                                            Eliminar
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                        </div>
+                        {hasItems && isExpanded && (
+                            <div className="mt-2 pt-2 border-t border-border/50 space-y-1">
+                                {tx.items!.map((item) => (
+                                    <div key={item.id} className="flex justify-between text-xs py-0.5">
+                                        <span className="text-muted-foreground">
+                                            {item.name} <span className="text-muted-foreground/60">×{item.quantity}</span>
+                                        </span>
+                                        <span className="tabular-nums font-medium">{formatCurrency(item.quantity * item.unit_price, tx.currency)}</span>
+                                    </div>
+                                ))}
+                                <div className="flex justify-between text-xs pt-1 border-t border-border/50 font-semibold">
+                                    <span className="text-muted-foreground">Total items</span>
+                                    <span className="tabular-nums">
+                                        {formatCurrency(tx.items!.reduce((s, i) => s + i.quantity * i.unit_price, 0), tx.currency)}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )
+            })}
+        </div>
+    )
+
+    const renderDesktopTable = () => (
+        <div className="hidden md:block rounded-md border border-border">
             <Table>
                 <TableHeader>
                     <TableRow>
                         <TableHead className="w-[30px]"></TableHead>
                         <TableHead>Fecha</TableHead>
                         <TableHead>Descripcion</TableHead>
-                        <TableHead>Comercio</TableHead>
                         <TableHead>Categoria</TableHead>
                         <TableHead>Cuenta</TableHead>
                         <TableHead>Tipo</TableHead>
@@ -128,9 +227,6 @@ export function TransactionTable({ transactions, loading, onEdit, onDelete }: Tr
                                                 </span>
                                             )}
                                         </span>
-                                    </TableCell>
-                                    <TableCell className="text-muted-foreground">
-                                        {(tx as any).merchant ?? "\u2014"}
                                     </TableCell>
                                     <TableCell className="text-muted-foreground">
                                         {tx.category?.name ?? "\u2014"}
@@ -171,7 +267,7 @@ export function TransactionTable({ transactions, loading, onEdit, onDelete }: Tr
                                 </TableRow>
                                 {hasItems && isExpanded && (
                                     <TableRow key={`${tx.id}-items`} className="bg-muted/30 hover:bg-muted/30">
-                                        <TableCell colSpan={9} className="py-2 px-4">
+                                        <TableCell colSpan={8} className="py-2 px-4">
                                             <div className="ml-6 space-y-1">
                                                 <div className="grid grid-cols-[1fr_60px_90px_90px] gap-2 text-[10px] uppercase tracking-wider text-muted-foreground font-medium pb-1 border-b border-border/50">
                                                     <span>Item</span>
@@ -205,5 +301,12 @@ export function TransactionTable({ transactions, loading, onEdit, onDelete }: Tr
                 </TableBody>
             </Table>
         </div>
+    )
+
+    return (
+        <>
+            {renderMobileCards()}
+            {renderDesktopTable()}
+        </>
     )
 }
