@@ -8,6 +8,9 @@ import { RecentTransactions } from "@/components/dashboard/recent-transactions"
 import { CategoryBreakdown } from "@/components/dashboard/category-breakdown"
 import { QuickActions } from "@/components/dashboard/quick-actions"
 import { CurrentMonth } from "@/components/dashboard/current-month"
+import { MonthlyRecap } from "@/components/dashboard/monthly-recap"
+import { CurrencyConverter } from "@/components/dashboard/currency-converter"
+import { SavingsGoals } from "@/components/dashboard/savings-goals"
 import { TransactionFormDialog } from "@/components/forms/transaction-form-dialog"
 
 export default function DashboardPage() {
@@ -56,6 +59,18 @@ export default function DashboardPage() {
                 </Suspense>
                 <Suspense fallback={<div className="h-[350px] rounded-xl bg-muted animate-pulse" />}>
                     <BudgetProgress />
+                </Suspense>
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <Suspense fallback={<div className="h-[300px] rounded-xl bg-muted animate-pulse" />}>
+                    <MonthlyRecap />
+                </Suspense>
+                <Suspense fallback={<div className="h-[300px] rounded-xl bg-muted animate-pulse" />}>
+                    <SavingsGoals />
+                </Suspense>
+                <Suspense fallback={<div className="h-[300px] rounded-xl bg-muted animate-pulse" />}>
+                    <CurrencyConverter />
                 </Suspense>
             </div>
 

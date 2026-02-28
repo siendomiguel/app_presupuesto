@@ -1,10 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { transactionSchema, type TransactionFormValues } from "@/lib/validations/transaction"
 import { transactionsService } from "@/lib/services/transactions"
+import { categorySuggestionService } from "@/lib/services/category-suggestions"
 import type { TransactionItem } from "@/lib/services/transactions"
 import { useUser } from "@/hooks/use-user"
 import { useAccounts } from "@/hooks/use-accounts"
@@ -45,9 +46,11 @@ import {
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { Database } from "@/lib/supabase/database.types"
+import { Badge } from "@/components/ui/badge"
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down"
 import Plus from "lucide-react/dist/esm/icons/plus"
 import X from "lucide-react/dist/esm/icons/x"
+import Sparkles from "lucide-react/dist/esm/icons/sparkles"
 import ListOrdered from "lucide-react/dist/esm/icons/list-ordered"
 
 type Transaction = Database['public']['Tables']['transactions']['Row'] & {
@@ -142,10 +145,52 @@ export function TransactionFormDialog({
     }, [open, transaction])
 
     const selectedType = form.watch("type")
+    const watchedDescription = form.watch("description")
     const watchedItems = form.watch("items") ?? []
     const transactionAmount = form.watch("amount")
     const watchedCurrency = form.watch("currency")
     const filteredCategories = categories.filter(c => c.type === selectedType || selectedType === "transfer")
+
+    // Auto-categorization
+    const [suggestion, setSuggestion] = useState<{ categoryId: string; categoryName: string } | null>(null)
+    const [suggestionDismissed, setSuggestionDismissed] = useState(false)
+    const manualCategorySet = useRef(false)
+
+    useEffect(() => {
+        if (!open || isEditing || !user?.id || !watchedDescription || watchedDescription.length < 2 || manualCategorySet.current) {
+            setSuggestion(null)
+            return
+        }
+
+        setSuggestionDismissed(false)
+        const timer = setTimeout(() => {
+            categorySuggestionService.suggestCategory(user.id, watchedDescription, selectedType)
+                .then(result => {
+                    if (result && !manualCategorySet.current) setSuggestion(result)
+                    else setSuggestion(null)
+                })
+                .catch(() => setSuggestion(null))
+        }, 500)
+
+        return () => clearTimeout(timer)
+    }, [watchedDescription, selectedType, user?.id, open, isEditing])
+
+    // Reset suggestion tracking when dialog opens
+    useEffect(() => {
+        if (open) {
+            manualCategorySet.current = false
+            setSuggestion(null)
+            setSuggestionDismissed(false)
+        }
+    }, [open])
+
+    const acceptSuggestion = () => {
+        if (suggestion) {
+            form.setValue("category_id", suggestion.categoryId)
+            manualCategorySet.current = true
+            setSuggestion(null)
+        }
+    }
 
     const itemsTotal = watchedItems.reduce((sum, item) => {
         return sum + (item.quantity || 1) * (item.unit_price || 0)
@@ -272,6 +317,25 @@ export function TransactionFormDialog({
                                     <FormControl>
                                         <Input {...field} />
                                     </FormControl>
+                                    {suggestion && !suggestionDismissed && (
+                                        <div className="flex items-center gap-1.5 pt-0.5">
+                                            <Badge
+                                                variant="secondary"
+                                                className="gap-1 cursor-pointer hover:bg-primary/10 text-xs"
+                                                onClick={acceptSuggestion}
+                                            >
+                                                <Sparkles className="h-3 w-3 text-primary" />
+                                                {suggestion.categoryName}
+                                            </Badge>
+                                            <button
+                                                type="button"
+                                                className="text-muted-foreground hover:text-foreground"
+                                                onClick={() => setSuggestionDismissed(true)}
+                                            >
+                                                <X className="h-3 w-3" />
+                                            </button>
+                                        </div>
+                                    )}
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -308,7 +372,7 @@ export function TransactionFormDialog({
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Categoria</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value ?? undefined}>
+                                    <Select onValueChange={(v) => { field.onChange(v); manualCategorySet.current = true; setSuggestion(null) }} value={field.value ?? undefined}>
                                         <FormControl>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Sin categoria" />

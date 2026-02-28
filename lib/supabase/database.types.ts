@@ -16,6 +16,8 @@ export interface Database {
                     full_name: string | null
                     avatar_url: string | null
                     currency_preference: 'USD' | 'COP'
+                    manual_exchange_rate: number | null
+                    use_auto_exchange_rate: boolean
                     created_at: string
                     updated_at: string
                 }
@@ -25,6 +27,8 @@ export interface Database {
                     full_name?: string | null
                     avatar_url?: string | null
                     currency_preference?: 'USD' | 'COP'
+                    manual_exchange_rate?: number | null
+                    use_auto_exchange_rate?: boolean
                     created_at?: string
                     updated_at?: string
                 }
@@ -34,6 +38,8 @@ export interface Database {
                     full_name?: string | null
                     avatar_url?: string | null
                     currency_preference?: 'USD' | 'COP'
+                    manual_exchange_rate?: number | null
+                    use_auto_exchange_rate?: boolean
                     created_at?: string
                     updated_at?: string
                 }
@@ -212,6 +218,47 @@ export interface Database {
                     description?: string
                     date?: string
                     notes?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+            }
+            savings_goals: {
+                Row: {
+                    id: string
+                    user_id: string
+                    name: string
+                    target_amount: number
+                    current_amount: number
+                    currency: 'USD' | 'COP'
+                    linked_account_id: string | null
+                    target_date: string | null
+                    color: string
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    user_id: string
+                    name: string
+                    target_amount: number
+                    current_amount?: number
+                    currency?: 'USD' | 'COP'
+                    linked_account_id?: string | null
+                    target_date?: string | null
+                    color?: string
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    user_id?: string
+                    name?: string
+                    target_amount?: number
+                    current_amount?: number
+                    currency?: 'USD' | 'COP'
+                    linked_account_id?: string | null
+                    target_date?: string | null
+                    color?: string
                     created_at?: string
                     updated_at?: string
                 }

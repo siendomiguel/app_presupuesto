@@ -11,6 +11,7 @@ import { TransactionFormDialog } from "@/components/forms/transaction-form-dialo
 import { DeleteConfirmationDialog } from "@/components/forms/delete-confirmation-dialog"
 import { CSVImportDialog } from "@/components/forms/csv-import-dialog"
 import { MergeTransactionsDialog } from "@/components/forms/merge-transactions-dialog"
+import { TransactionDetailSheet } from "@/components/transactions/transaction-detail-sheet"
 import { transactionsService } from "@/lib/services/transactions"
 import { Button } from "@/components/ui/button"
 import Plus from "lucide-react/dist/esm/icons/plus"
@@ -73,6 +74,9 @@ export function TransactionsContent() {
     const [deleting, setDeleting] = useState(false)
     const [csvImportOpen, setCsvImportOpen] = useState(false)
 
+    // Detail sheet state
+    const [viewingTransaction, setViewingTransaction] = useState<Transaction | null>(null)
+
     // Selection / merge state
     const [selectionMode, setSelectionMode] = useState(false)
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -90,6 +94,11 @@ export function TransactionsContent() {
     const exitSelectionMode = () => {
         setSelectionMode(false)
         setSelectedIds(new Set())
+    }
+
+    const handleLongPressSelect = (id: string) => {
+        setSelectionMode(true)
+        setSelectedIds(new Set([id]))
     }
 
     const selectedTransactions = useMemo(() =>
@@ -243,9 +252,11 @@ export function TransactionsContent() {
                 loading={loading}
                 onEdit={handleEdit}
                 onDelete={setDeleteTarget}
+                onView={setViewingTransaction}
                 selectionMode={selectionMode}
                 selectedIds={selectedIds}
                 onToggleSelect={toggleSelect}
+                onLongPressSelect={handleLongPressSelect}
             />
 
             {/* Floating selection bar on mobile */}
@@ -292,6 +303,14 @@ export function TransactionsContent() {
                     onSuccess={handleMergeSuccess}
                 />
             )}
+
+            <TransactionDetailSheet
+                transaction={viewingTransaction}
+                open={!!viewingTransaction}
+                onOpenChange={(open) => { if (!open) setViewingTransaction(null) }}
+                onEdit={handleEdit}
+                onDelete={setDeleteTarget}
+            />
         </>
     )
 }

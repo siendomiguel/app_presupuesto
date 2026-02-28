@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import {
     Table,
     TableBody,
@@ -53,13 +53,45 @@ interface TransactionTableProps {
     loading: boolean
     onEdit: (transaction: Transaction) => void
     onDelete: (transaction: Transaction) => void
+    onView?: (transaction: Transaction) => void
     selectionMode?: boolean
     selectedIds?: Set<string>
     onToggleSelect?: (id: string) => void
+    onLongPressSelect?: (id: string) => void
 }
 
-export function TransactionTable({ transactions, loading, onEdit, onDelete, selectionMode, selectedIds, onToggleSelect }: TransactionTableProps) {
+export function TransactionTable({ transactions, loading, onEdit, onDelete, onView, selectionMode, selectedIds, onToggleSelect, onLongPressSelect }: TransactionTableProps) {
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
+    const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const didLongPress = useRef(false)
+
+    const startLongPress = (id: string) => {
+        if (selectionMode) return
+        didLongPress.current = false
+        longPressTimer.current = setTimeout(() => {
+            didLongPress.current = true
+            onLongPressSelect?.(id)
+        }, 500)
+    }
+
+    const cancelLongPress = () => {
+        if (longPressTimer.current) {
+            clearTimeout(longPressTimer.current)
+            longPressTimer.current = null
+        }
+    }
+
+    const handleRowClick = (tx: Transaction) => {
+        if (didLongPress.current) {
+            didLongPress.current = false
+            return
+        }
+        if (selectionMode) {
+            onToggleSelect?.(tx.id)
+        } else {
+            onView?.(tx)
+        }
+    }
 
     const toggleRow = (id: string) => {
         setExpandedRows(prev => {
@@ -101,12 +133,16 @@ export function TransactionTable({ transactions, loading, onEdit, onDelete, sele
                     <div
                         key={tx.id}
                         className={cn(
-                            "rounded-lg border border-border bg-card p-3",
-                            hasItems && !selectionMode && "cursor-pointer",
-                            selectionMode && "cursor-pointer",
+                            "rounded-lg border border-border bg-card p-3 cursor-pointer select-none",
                             isSelected && "ring-2 ring-primary/50 bg-primary/5"
                         )}
-                        onClick={selectionMode ? () => onToggleSelect?.(tx.id) : hasItems ? () => toggleRow(tx.id) : undefined}
+                        onClick={() => handleRowClick(tx)}
+                        onMouseDown={() => startLongPress(tx.id)}
+                        onMouseUp={cancelLongPress}
+                        onMouseLeave={cancelLongPress}
+                        onTouchStart={() => startLongPress(tx.id)}
+                        onTouchEnd={cancelLongPress}
+                        onTouchMove={cancelLongPress}
                     >
                         <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0 flex-1">
@@ -228,11 +264,13 @@ export function TransactionTable({ transactions, loading, onEdit, onDelete, sele
                                 <TableRow
                                     key={tx.id}
                                     className={cn(
-                                        hasItems && !selectionMode && "cursor-pointer",
-                                        selectionMode && "cursor-pointer",
+                                        "cursor-pointer select-none",
                                         isSelected && "bg-primary/5"
                                     )}
-                                    onClick={selectionMode ? () => onToggleSelect?.(tx.id) : hasItems ? () => toggleRow(tx.id) : undefined}
+                                    onClick={() => handleRowClick(tx)}
+                                    onMouseDown={() => startLongPress(tx.id)}
+                                    onMouseUp={cancelLongPress}
+                                    onMouseLeave={cancelLongPress}
                                 >
                                     {selectionMode && (
                                         <TableCell className="px-2">
