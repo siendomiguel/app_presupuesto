@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import Plus from "lucide-react/dist/esm/icons/plus"
 import Pencil from "lucide-react/dist/esm/icons/pencil"
 import Trash2 from "lucide-react/dist/esm/icons/trash-2"
+import { CategoryIcon } from "@/components/ui/category-icon"
 import { toast } from "sonner"
 import { Database } from "@/lib/supabase/database.types"
 
@@ -68,6 +69,7 @@ export function CategoriesSettings() {
                                                 {cat.color && (
                                                     <div className="h-3 w-3 rounded-full" style={{ backgroundColor: cat.color }} />
                                                 )}
+                                                <CategoryIcon name={cat.icon} className="h-4 w-4 text-muted-foreground" />
                                                 <span className="text-sm font-medium">{cat.name}</span>
                                                 {cat.is_default && <Badge variant="outline" className="text-xs">Default</Badge>}
                                             </div>
@@ -97,6 +99,7 @@ export function CategoriesSettings() {
                                                 {cat.color && (
                                                     <div className="h-3 w-3 rounded-full" style={{ backgroundColor: cat.color }} />
                                                 )}
+                                                <CategoryIcon name={cat.icon} className="h-4 w-4 text-muted-foreground" />
                                                 <span className="text-sm font-medium">{cat.name}</span>
                                                 {cat.is_default && <Badge variant="outline" className="text-xs">Default</Badge>}
                                             </div>

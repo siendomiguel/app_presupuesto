@@ -22,6 +22,7 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { IconPicker } from "@/components/ui/icon-picker"
 import { Button } from "@/components/ui/button"
 import {
     Select,
@@ -186,7 +187,7 @@ export function CategoryFormDialog({
                                 <FormItem>
                                     <FormLabel>Icono (opcional)</FormLabel>
                                     <FormControl>
-                                        <Input {...field} value={field.value ?? ""} placeholder="ej: shopping-cart" />
+                                        <IconPicker value={field.value} onChange={field.onChange} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
