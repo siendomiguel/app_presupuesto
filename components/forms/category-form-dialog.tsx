@@ -44,6 +44,18 @@ const COLORS = [
     { label: "Naranja", value: "#f97316" },
     { label: "Rosa", value: "#ec4899" },
     { label: "Gris", value: "#6b7280" },
+    { label: "Turquesa", value: "#14b8a6" },
+    { label: "Índigo", value: "#6366f1" },
+    { label: "Cian", value: "#06b6d4" },
+    { label: "Lima", value: "#84cc16" },
+    { label: "Ámbar", value: "#f59e0b" },
+    { label: "Fucsia", value: "#d946ef" },
+    { label: "Esmeralda", value: "#10b981" },
+    { label: "Celeste", value: "#38bdf8" },
+    { label: "Coral", value: "#fb7185" },
+    { label: "Violeta", value: "#7c3aed" },
+    { label: "Oliva", value: "#65a30d" },
+    { label: "Marrón", value: "#a16207" },
 ]
 
 interface CategoryFormDialogProps {
