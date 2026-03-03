@@ -14,6 +14,7 @@ const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans' })
 export const metadata: Metadata = {
   title: 'Fintrack - Seguimiento de Gastos y Presupuestos',
   description: 'Controla tus finanzas personales con seguimiento de gastos, presupuestos y reportes visuales. Soporte multi-moneda USD/COP.',
+  manifest: '/manifest.json',
   icons: {
     icon: '/icon-192x192.png',
     apple: '/icon-192x192.png',

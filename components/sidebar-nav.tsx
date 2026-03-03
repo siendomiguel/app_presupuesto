@@ -8,6 +8,7 @@ import PieChart from "lucide-react/dist/esm/icons/pie-chart"
 import Settings from "lucide-react/dist/esm/icons/settings"
 import CreditCard from "lucide-react/dist/esm/icons/credit-card"
 import Package from "lucide-react/dist/esm/icons/package"
+import HelpCircle from "lucide-react/dist/esm/icons/help-circle"
 import LogOut from "lucide-react/dist/esm/icons/log-out"
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left"
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right"
@@ -26,6 +27,7 @@ const navItems = [
   { label: "Reportes", icon: PieChart, href: "/reports" },
   { label: "Tarjetas", icon: CreditCard, href: "/cards" },
   { label: "Ajustes", icon: Settings, href: "/settings" },
+  { label: "Ayuda", icon: HelpCircle, href: "/help" },
 ]
 
 export function SidebarNav() {
