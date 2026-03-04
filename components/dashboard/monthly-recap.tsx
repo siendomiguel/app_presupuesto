@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useUser } from "@/hooks/use-user"
 import { useMonthlyInsights } from "@/hooks/use-insights"
@@ -15,7 +16,15 @@ import { cn } from "@/lib/utils"
 
 export function MonthlyRecap() {
     const { user, profile } = useUser()
-    const currency = (profile?.currency_preference as "USD" | "COP") || "USD"
+    const defaultCurrency = (profile?.currency_preference as "USD" | "COP") || "USD"
+    const [currency, setCurrency] = useState<"USD" | "COP">(defaultCurrency)
+    const currencyInitialized = useRef(false)
+    useEffect(() => {
+        if (profile?.currency_preference && !currencyInitialized.current) {
+            setCurrency(profile.currency_preference as "USD" | "COP")
+            currencyInitialized.current = true
+        }
+    }, [profile?.currency_preference])
     const { insights, loading } = useMonthlyInsights(user?.id, currency)
 
     const monthName = format(new Date(), "MMMM yyyy", { locale: es })
@@ -72,10 +81,30 @@ export function MonthlyRecap() {
 
     return (
         <Card className="border-border/60">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-base font-semibold text-card-foreground capitalize">
                     Resumen de {monthName}
                 </CardTitle>
+                <div className="flex rounded-lg border border-border">
+                    <button
+                        onClick={() => setCurrency("USD")}
+                        className={cn(
+                            "px-2.5 py-1 text-xs font-medium rounded-l-lg transition-colors",
+                            currency === "USD" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+                        )}
+                    >
+                        USD
+                    </button>
+                    <button
+                        onClick={() => setCurrency("COP")}
+                        className={cn(
+                            "px-2.5 py-1 text-xs font-medium rounded-r-lg transition-colors",
+                            currency === "COP" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+                        )}
+                    >
+                        COP
+                    </button>
+                </div>
             </CardHeader>
             <CardContent className="space-y-3">
                 {stats.map((stat) => (

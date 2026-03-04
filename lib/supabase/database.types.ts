@@ -16,6 +16,7 @@ export interface Database {
                     full_name: string | null
                     avatar_url: string | null
                     currency_preference: 'USD' | 'COP'
+                    plan: 'free' | 'pro' | 'premium'
                     manual_exchange_rate: number | null
                     use_auto_exchange_rate: boolean
                     created_at: string
@@ -27,6 +28,7 @@ export interface Database {
                     full_name?: string | null
                     avatar_url?: string | null
                     currency_preference?: 'USD' | 'COP'
+                    plan?: 'free' | 'pro' | 'premium'
                     manual_exchange_rate?: number | null
                     use_auto_exchange_rate?: boolean
                     created_at?: string
@@ -38,6 +40,7 @@ export interface Database {
                     full_name?: string | null
                     avatar_url?: string | null
                     currency_preference?: 'USD' | 'COP'
+                    plan?: 'free' | 'pro' | 'premium'
                     manual_exchange_rate?: number | null
                     use_auto_exchange_rate?: boolean
                     created_at?: string

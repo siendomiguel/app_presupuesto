@@ -12,11 +12,14 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer } from "@/components/ui/chart"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useState, useMemo } from "react"
 import { useUser } from "@/hooks/use-user"
 import { useTransactions } from "@/hooks/use-transactions"
 import { startOfYear, endOfYear, startOfMonth, endOfMonth, startOfWeek, endOfWeek, subDays, subWeeks, eachMonthOfInterval, eachWeekOfInterval, eachDayOfInterval, format } from "date-fns"
 import { es } from "date-fns/locale"
+
+type CurrencyFilter = "USD" | "COP"
 
 function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; dataKey: string }>; label?: string }) {
   if (!active || !payload?.length) return null
@@ -41,7 +44,8 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
 
 export function SpendingChart() {
   const [period, setPeriod] = useState("mensual")
-  const { user } = useUser()
+  const [currencyFilter, setCurrencyFilter] = useState<CurrencyFilter | "">("")
+  const { user, profile } = useUser()
 
   // Get date ranges
   const now = new Date()
@@ -65,31 +69,38 @@ export function SpendingChart() {
   const range = dateRanges[period] || dateRanges["mensual"]
   const { transactions, loading } = useTransactions(user?.id, range)
 
+  // Default to user's preferred currency
+  const activeCurrency = useMemo<CurrencyFilter>(() => {
+    if (currencyFilter) return currencyFilter
+    return (profile?.currency_preference as CurrencyFilter) || "USD"
+  }, [currencyFilter, profile?.currency_preference])
+
   // Process data for charts
   const data = useMemo(() => {
     if (!transactions.length) return []
+
+    const aggregate = (txs: Array<typeof transactions[number]>) => {
+      const filtered = txs.filter(t => t.currency === activeCurrency)
+      return {
+        name: "",
+        ingresos: filtered.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0),
+        gastos: filtered.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0),
+      }
+    }
 
     if (period === "7dias") {
       const days = eachDayOfInterval({ start: subDays(now, 6), end: now })
       return days.map(day => {
         const dayStr = format(day, 'yyyy-MM-dd')
         const dayTx = transactions.filter(t => t.date === dayStr)
-        return {
-          name: format(day, 'EEE d', { locale: es }),
-          ingresos: dayTx.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0),
-          gastos: dayTx.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0),
-        }
+        return { ...aggregate(dayTx), name: format(day, 'EEE d', { locale: es }) }
       })
     } else if (period === "mensual") {
       const days = eachDayOfInterval({ start: startOfMonth(now), end: endOfMonth(now) })
       return days.map(day => {
         const dayStr = format(day, 'yyyy-MM-dd')
         const dayTx = transactions.filter(t => t.date === dayStr)
-        return {
-          name: format(day, 'd', { locale: es }),
-          ingresos: dayTx.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0),
-          gastos: dayTx.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0),
-        }
+        return { ...aggregate(dayTx), name: format(day, 'd', { locale: es }) }
       })
     } else if (period === "semanal") {
       const weeks = eachWeekOfInterval(
@@ -100,50 +111,48 @@ export function SpendingChart() {
         const wEnd = endOfWeek(weekStart, { weekStartsOn: 1 })
         const wStartStr = format(weekStart, 'yyyy-MM-dd')
         const wEndStr = format(wEnd, 'yyyy-MM-dd')
-        const weekTransactions = transactions.filter(t => t.date >= wStartStr && t.date <= wEndStr)
-
-        return {
-          name: `${format(weekStart, 'd MMM', { locale: es })}`,
-          ingresos: weekTransactions
-            .filter(t => t.type === 'income')
-            .reduce((sum, t) => sum + t.amount, 0),
-          gastos: weekTransactions
-            .filter(t => t.type === 'expense')
-            .reduce((sum, t) => sum + t.amount, 0),
-        }
+        const weekTx = transactions.filter(t => t.date >= wStartStr && t.date <= wEndStr)
+        return { ...aggregate(weekTx), name: format(weekStart, 'd MMM', { locale: es }) }
       })
     } else {
       const months = eachMonthOfInterval({ start: startOfYear(now), end: endOfYear(now) })
       return months.map(month => {
         const monthStr = format(month, 'yyyy-MM')
-        const monthTransactions = transactions.filter(t => t.date.startsWith(monthStr))
-
-        return {
-          name: format(month, 'MMM', { locale: es }),
-          ingresos: monthTransactions
-            .filter(t => t.type === 'income')
-            .reduce((sum, t) => sum + t.amount, 0),
-          gastos: monthTransactions
-            .filter(t => t.type === 'expense')
-            .reduce((sum, t) => sum + t.amount, 0),
-        }
+        const monthTx = transactions.filter(t => t.date.startsWith(monthStr))
+        return { ...aggregate(monthTx), name: format(month, 'MMM', { locale: es }) }
       })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transactions, period])
+  }, [transactions, period, activeCurrency])
+
+  const chartConfig = {
+    ingresos: { label: "Ingresos", color: "hsl(158, 64%, 42%)" },
+    gastos: { label: "Gastos", color: "hsl(0, 72%, 51%)" },
+  }
 
   return (
     <Card className="border-border/60">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
+      <CardHeader className="flex flex-col gap-2 pb-2 sm:flex-row sm:items-center sm:justify-between">
         <CardTitle className="text-base font-semibold text-card-foreground">Ingresos vs Gastos</CardTitle>
-        <Tabs value={period} onValueChange={setPeriod}>
-          <TabsList className="h-8">
-            <TabsTrigger value="7dias" className="text-xs px-2 sm:px-3 h-6">7 dias</TabsTrigger>
-            <TabsTrigger value="mensual" className="text-xs px-2 sm:px-3 h-6">Mes</TabsTrigger>
-            <TabsTrigger value="semanal" className="text-xs px-2 sm:px-3 h-6">Semanal</TabsTrigger>
-            <TabsTrigger value="anual" className="text-xs px-2 sm:px-3 h-6">Anual</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex items-center gap-2">
+          <ToggleGroup
+            type="single"
+            value={activeCurrency}
+            onValueChange={(v) => { if (v) setCurrencyFilter(v as CurrencyFilter) }}
+            className="h-8"
+          >
+            <ToggleGroupItem value="USD" className="text-xs px-2 h-6">USD</ToggleGroupItem>
+            <ToggleGroupItem value="COP" className="text-xs px-2 h-6">COP</ToggleGroupItem>
+          </ToggleGroup>
+          <Tabs value={period} onValueChange={setPeriod}>
+            <TabsList className="h-8">
+              <TabsTrigger value="7dias" className="text-xs px-2 sm:px-3 h-6">7 dias</TabsTrigger>
+              <TabsTrigger value="mensual" className="text-xs px-2 sm:px-3 h-6">Mes</TabsTrigger>
+              <TabsTrigger value="semanal" className="text-xs px-2 sm:px-3 h-6">Semanal</TabsTrigger>
+              <TabsTrigger value="anual" className="text-xs px-2 sm:px-3 h-6">Anual</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
       </CardHeader>
       <CardContent className="pt-2">
         {loading ? (
@@ -155,13 +164,7 @@ export function SpendingChart() {
             <p className="text-sm text-muted-foreground">No hay datos para mostrar</p>
           </div>
         ) : (
-          <ChartContainer
-            config={{
-              ingresos: { label: "Ingresos", color: "hsl(158, 64%, 42%)" },
-              gastos: { label: "Gastos", color: "hsl(0, 72%, 51%)" },
-            }}
-            className="h-[280px] w-full"
-          >
+          <ChartContainer config={chartConfig} className="h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <defs>

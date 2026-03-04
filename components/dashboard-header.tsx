@@ -34,6 +34,7 @@ import PieChart from "lucide-react/dist/esm/icons/pie-chart"
 import Settings from "lucide-react/dist/esm/icons/settings"
 import CreditCard from "lucide-react/dist/esm/icons/credit-card"
 import Package from "lucide-react/dist/esm/icons/package"
+import ShoppingCart from "lucide-react/dist/esm/icons/shopping-cart"
 import HelpCircle from "lucide-react/dist/esm/icons/help-circle"
 import BellOff from "lucide-react/dist/esm/icons/bell-off"
 import Link from "next/link"
@@ -43,11 +44,13 @@ import { useUser } from "@/hooks/use-user"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 import { TransactionFormDialog } from "@/components/forms/transaction-form-dialog"
+import { ThemeSwitcher } from "@/components/theme-switcher"
 
 const mobileNavItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
   { label: "Transacciones", icon: ArrowUpDown, href: "/transactions" },
   { label: "Items", icon: Package, href: "/items" },
+  { label: "Lista de compras", icon: ShoppingCart, href: "/shopping-lists" },
   { label: "Presupuestos", icon: Target, href: "/budgets" },
   { label: "Reportes", icon: PieChart, href: "/reports" },
   { label: "Tarjetas", icon: CreditCard, href: "/cards" },
@@ -172,6 +175,8 @@ export function DashboardHeader({ menuOpen: menuOpenProp, onMenuOpenChange }: Da
             <Plus className="h-5 w-5" />
             <span className="sr-only">Nuevo gasto</span>
           </Button>
+
+          <ThemeSwitcher />
 
           <Popover open={notifOpen} onOpenChange={(open) => { setNotifOpen(open); if (open) setNotifDismissed(true) }}>
             <PopoverTrigger asChild>

@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react"
 import { User } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/client"
 import { Database } from "@/lib/supabase/database.types"
+import { Plan, Feature, canAccess as canAccessFn } from "@/lib/membership"
 
 type Profile = Database['public']['Tables']['profiles']['Row']
 
@@ -11,10 +12,12 @@ interface UserContextValue {
   user: User | null
   profile: Profile | null
   loading: boolean
+  plan: Plan
+  canAccess: (feature: Feature) => boolean
   refetchProfile: () => void
 }
 
-const UserContext = createContext<UserContextValue>({ user: null, profile: null, loading: true, refetchProfile: () => {} })
+const UserContext = createContext<UserContextValue>({ user: null, profile: null, loading: true, plan: 'free', canAccess: (f) => canAccessFn('free', f), refetchProfile: () => {} })
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -56,8 +59,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const refetchProfile = () => setProfileKey(k => k + 1)
 
+  const plan: Plan = (profile?.plan as Plan) || 'free'
+  const canAccess = (feature: Feature) => canAccessFn(plan, feature)
+
   return (
-    <UserContext.Provider value={{ user, profile, loading, refetchProfile }}>
+    <UserContext.Provider value={{ user, profile, loading, plan, canAccess, refetchProfile }}>
       {children}
     </UserContext.Provider>
   )

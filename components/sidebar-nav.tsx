@@ -8,6 +8,7 @@ import PieChart from "lucide-react/dist/esm/icons/pie-chart"
 import Settings from "lucide-react/dist/esm/icons/settings"
 import CreditCard from "lucide-react/dist/esm/icons/credit-card"
 import Package from "lucide-react/dist/esm/icons/package"
+import ShoppingCart from "lucide-react/dist/esm/icons/shopping-cart"
 import HelpCircle from "lucide-react/dist/esm/icons/help-circle"
 import LogOut from "lucide-react/dist/esm/icons/log-out"
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left"
@@ -19,15 +20,18 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
 
-const navItems = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-  { label: "Transacciones", icon: ArrowUpDown, href: "/transactions" },
-  { label: "Items", icon: Package, href: "/items" },
-  { label: "Presupuestos", icon: Target, href: "/budgets" },
-  { label: "Reportes", icon: PieChart, href: "/reports" },
-  { label: "Tarjetas", icon: CreditCard, href: "/cards" },
-  { label: "Ajustes", icon: Settings, href: "/settings" },
-  { label: "Ayuda", icon: HelpCircle, href: "/help" },
+import type { Feature } from "@/lib/membership"
+
+const navItems: { label: string; icon: typeof LayoutDashboard; href: string; feature: Feature }[] = [
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", feature: "dashboard" },
+  { label: "Transacciones", icon: ArrowUpDown, href: "/transactions", feature: "transactions" },
+  { label: "Items", icon: Package, href: "/items", feature: "items" },
+  { label: "Lista de compras", icon: ShoppingCart, href: "/shopping-lists", feature: "grocery_list" },
+  { label: "Presupuestos", icon: Target, href: "/budgets", feature: "budgets" },
+  { label: "Reportes", icon: PieChart, href: "/reports", feature: "reports" },
+  { label: "Tarjetas", icon: CreditCard, href: "/cards", feature: "cards" },
+  { label: "Ajustes", icon: Settings, href: "/settings", feature: "settings" },
+  { label: "Ayuda", icon: HelpCircle, href: "/help", feature: "help" },
 ]
 
 export function SidebarNav() {

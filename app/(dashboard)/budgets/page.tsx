@@ -1,16 +1,26 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useUser } from "@/hooks/use-user"
 import { useBudgets, useBudgetProgress } from "@/hooks/use-budgets"
+import { useTransactions } from "@/hooks/use-transactions"
 import { BudgetCard } from "@/components/budgets/budget-card"
 import { BudgetFormDialog } from "@/components/forms/budget-form-dialog"
 import { DeleteConfirmationDialog } from "@/components/forms/delete-confirmation-dialog"
+import { TransactionTable } from "@/components/transactions/transaction-table"
 import { budgetsService } from "@/lib/services/budgets"
 import { Button } from "@/components/ui/button"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import Plus from "lucide-react/dist/esm/icons/plus"
 import { toast } from "sonner"
 import { Database } from "@/lib/supabase/database.types"
+import { formatCurrency } from "@/lib/format"
 
 type Budget = Database['public']['Tables']['budgets']['Row']
 type BudgetProgressRow = Database['public']['Views']['budget_progress']['Row']
@@ -24,6 +34,22 @@ export default function BudgetsPage() {
     const [editingBudget, setEditingBudget] = useState<Budget | null>(null)
     const [deleteTarget, setDeleteTarget] = useState<BudgetProgressRow | null>(null)
     const [deleting, setDeleting] = useState(false)
+    const [selectedBudget, setSelectedBudget] = useState<BudgetProgressRow | null>(null)
+
+    const txFilters = useMemo(() => {
+        if (!selectedBudget) return undefined
+        return {
+            type: 'expense' as const,
+            categoryId: selectedBudget.category_id || undefined,
+            startDate: selectedBudget.start_date,
+            endDate: selectedBudget.end_date || undefined,
+        }
+    }, [selectedBudget])
+
+    const { transactions: budgetTransactions, loading: txLoading } = useTransactions(
+        selectedBudget ? user?.id : undefined,
+        txFilters
+    )
 
     const handleEdit = (bp: BudgetProgressRow) => {
         const budget = budgets.find(b => b.id === bp.budget_id)
@@ -89,6 +115,7 @@ export default function BudgetsPage() {
                             budget={bp}
                             onEdit={() => handleEdit(bp)}
                             onDelete={() => setDeleteTarget(bp)}
+                            onClick={() => setSelectedBudget(bp)}
                         />
                     ))}
                 </div>
@@ -109,6 +136,33 @@ export default function BudgetsPage() {
                 onConfirm={handleDelete}
                 loading={deleting}
             />
+
+            <Dialog open={!!selectedBudget} onOpenChange={(open) => { if (!open) setSelectedBudget(null) }}>
+                <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
+                    <DialogHeader>
+                        <DialogTitle>{selectedBudget?.name} — Transacciones</DialogTitle>
+                        {selectedBudget && (
+                            <p className="text-sm text-muted-foreground">
+                                {selectedBudget.amount_usd > 0 && (
+                                    <span>Gastado {formatCurrency(selectedBudget.spent_usd, "USD")} de {formatCurrency(selectedBudget.amount_usd, "USD")}</span>
+                                )}
+                                {selectedBudget.amount_usd > 0 && selectedBudget.amount_cop > 0 && " · "}
+                                {selectedBudget.amount_cop > 0 && (
+                                    <span>Gastado {formatCurrency(selectedBudget.spent_cop, "COP")} de {formatCurrency(selectedBudget.amount_cop, "COP")}</span>
+                                )}
+                            </p>
+                        )}
+                    </DialogHeader>
+                    <ScrollArea className="flex-1 -mx-6 px-6">
+                        <TransactionTable
+                            transactions={budgetTransactions}
+                            loading={txLoading}
+                            onEdit={() => {}}
+                            onDelete={() => {}}
+                        />
+                    </ScrollArea>
+                </DialogContent>
+            </Dialog>
         </>
     )
 }

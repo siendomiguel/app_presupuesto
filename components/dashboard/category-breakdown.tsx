@@ -3,13 +3,17 @@
 import { useState, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 import { ChartContainer } from "@/components/ui/chart"
 import { useUser } from "@/hooks/use-user"
 import { useCategorySpending } from "@/hooks/use-categories"
+import { formatCurrency } from "@/lib/format"
 import { startOfYear, endOfYear, startOfMonth, endOfMonth, startOfWeek, endOfWeek, subDays, subWeeks, format } from "date-fns"
 
-function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: { name: string; value: number; color: string; total?: number } }> }) {
+type CurrencyFilter = "USD" | "COP"
+
+function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: { name: string; value: number; color: string; total?: number; currency?: string } }> }) {
   if (!active || !payload?.length) return null
   const data = payload[0].payload
   const total = data.total || data.value
@@ -19,7 +23,9 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
         <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: data.color }} />
         <span className="text-xs font-medium text-card-foreground">{data.name}</span>
       </div>
-      <p className="mt-1 text-sm font-semibold text-card-foreground">${data.value.toLocaleString()}</p>
+      <p className="mt-1 text-sm font-semibold text-card-foreground">
+        {formatCurrency(data.value, data.currency || 'USD')}
+      </p>
       <p className="text-xs text-muted-foreground">{total > 0 ? ((data.value / total) * 100).toFixed(1) : 0}% del total</p>
     </div>
   )
@@ -34,7 +40,8 @@ const periodLabels: Record<string, string> = {
 
 export function CategoryBreakdown() {
   const [period, setPeriod] = useState("mensual")
-  const { user } = useUser()
+  const [currencyFilter, setCurrencyFilter] = useState<CurrencyFilter | "">("")
+  const { user, profile } = useUser()
 
   const now = new Date()
 
@@ -61,21 +68,41 @@ export function CategoryBreakdown() {
   const range = dateRanges[period as keyof typeof dateRanges] || dateRanges["mensual"]
   const { spending, loading } = useCategorySpending(user?.id, range.startDate, range.endDate)
 
-  // Transform data for chart (combine USD and COP)
-  const categoryData = spending.map(cat => ({
-    name: cat.name,
-    value: cat.usd + cat.cop,
-    color: cat.color || "hsl(158, 64%, 42%)",
-  }))
+  // Default to user's preferred currency
+  const activeCurrency = useMemo<CurrencyFilter>(() => {
+    if (currencyFilter) return currencyFilter
+    return profile?.currency_preference || "USD"
+  }, [currencyFilter, profile?.currency_preference])
+
+  // Transform data for chart using selected currency
+  const categoryData = spending
+    .map(cat => ({
+      name: cat.name,
+      value: activeCurrency === "USD" ? cat.usd : cat.cop,
+      color: cat.color || "hsl(158, 64%, 42%)",
+      currency: activeCurrency,
+    }))
+    .filter(cat => cat.value > 0)
 
   const total = categoryData.reduce((acc, item) => acc + item.value, 0)
 
   return (
     <Card className="border-border/60">
-      <CardHeader className="flex flex-col gap-2 pb-3 sm:flex-row sm:items-center sm:justify-between">
-        <CardTitle className="text-base font-semibold text-card-foreground">Gastos por categoria</CardTitle>
+      <CardHeader className="flex flex-col gap-2 pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-semibold text-card-foreground">Gastos por categoria</CardTitle>
+          <ToggleGroup
+            type="single"
+            value={activeCurrency}
+            onValueChange={(v) => { if (v) setCurrencyFilter(v as CurrencyFilter) }}
+            className="h-8"
+          >
+            <ToggleGroupItem value="USD" className="text-xs px-2 h-6">USD</ToggleGroupItem>
+            <ToggleGroupItem value="COP" className="text-xs px-2 h-6">COP</ToggleGroupItem>
+          </ToggleGroup>
+        </div>
         <Tabs value={period} onValueChange={setPeriod}>
-          <TabsList className="h-8">
+          <TabsList className="h-8 w-full">
             <TabsTrigger value="7dias" className="text-xs px-2 sm:px-3 h-6">7 dias</TabsTrigger>
             <TabsTrigger value="mensual" className="text-xs px-2 sm:px-3 h-6">Mes</TabsTrigger>
             <TabsTrigger value="semanal" className="text-xs px-2 sm:px-3 h-6">Semanal</TabsTrigger>
@@ -90,7 +117,7 @@ export function CategoryBreakdown() {
           </div>
         ) : categoryData.length === 0 ? (
           <div className="flex items-center justify-center h-[200px]">
-            <p className="text-sm text-muted-foreground">No hay gastos {periodLabels[period]}</p>
+            <p className="text-sm text-muted-foreground">No hay gastos en {activeCurrency} {periodLabels[period]}</p>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-4">

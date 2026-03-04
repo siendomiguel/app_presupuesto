@@ -8,17 +8,19 @@ export function parseLocalDate(dateStr: string): Date {
   return new Date(dateStr + 'T00:00:00')
 }
 
-const currencyFormatters = new Map<string, Intl.NumberFormat>()
+const usdFormatter = new Intl.NumberFormat('es-CO', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 2,
+})
 
-export function formatCurrency(amount: number, currency: string) {
-  let formatter = currencyFormatters.get(currency)
-  if (!formatter) {
-    formatter = new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: 2,
-    })
-    currencyFormatters.set(currency, formatter)
-  }
-  return formatter.format(amount)
+const copFormatter = new Intl.NumberFormat('es-CO', {
+  style: 'currency',
+  currency: 'COP',
+  minimumFractionDigits: 2,
+})
+
+export function formatCurrency(amount: number, currency: string): string {
+  if (currency === 'COP') return copFormatter.format(amount)
+  return usdFormatter.format(amount)
 }

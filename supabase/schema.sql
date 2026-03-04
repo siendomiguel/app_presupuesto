@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   full_name TEXT,
   avatar_url TEXT,
   currency_preference TEXT DEFAULT 'USD' CHECK (currency_preference IN ('USD', 'COP')),
+  plan TEXT DEFAULT 'free' CHECK (plan IN ('free', 'pro', 'premium')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -319,6 +320,73 @@ DROP TRIGGER IF EXISTS update_transactions_updated_at ON transactions;
 CREATE TRIGGER update_transactions_updated_at
   BEFORE UPDATE ON transactions
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
+-- 13. TABLA: shopping_lists
+-- Listas de compras del usuario
+-- ============================================
+CREATE TABLE IF NOT EXISTS shopping_lists (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  name TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_shopping_lists_user_id ON shopping_lists(user_id);
+
+ALTER TABLE shopping_lists ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own shopping_lists" ON shopping_lists
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own shopping_lists" ON shopping_lists
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own shopping_lists" ON shopping_lists
+  FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own shopping_lists" ON shopping_lists
+  FOR DELETE USING (auth.uid() = user_id);
+
+DROP TRIGGER IF EXISTS update_shopping_lists_updated_at ON shopping_lists;
+CREATE TRIGGER update_shopping_lists_updated_at
+  BEFORE UPDATE ON shopping_lists
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
+-- 14. TABLA: shopping_list_items
+-- Items de cada lista de compras
+-- ============================================
+CREATE TABLE IF NOT EXISTS shopping_list_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  list_id UUID REFERENCES shopping_lists(id) ON DELETE CASCADE NOT NULL,
+  name TEXT NOT NULL,
+  quantity DECIMAL(10, 2) NOT NULL DEFAULT 1,
+  unit_price DECIMAL(12, 2),
+  category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
+  checked BOOLEAN NOT NULL DEFAULT FALSE,
+  position INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_shopping_list_items_list_id ON shopping_list_items(list_id);
+
+ALTER TABLE shopping_list_items ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own shopping_list_items" ON shopping_list_items
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM shopping_lists WHERE id = shopping_list_items.list_id AND user_id = auth.uid())
+  );
+CREATE POLICY "Users can insert own shopping_list_items" ON shopping_list_items
+  FOR INSERT WITH CHECK (
+    EXISTS (SELECT 1 FROM shopping_lists WHERE id = shopping_list_items.list_id AND user_id = auth.uid())
+  );
+CREATE POLICY "Users can update own shopping_list_items" ON shopping_list_items
+  FOR UPDATE USING (
+    EXISTS (SELECT 1 FROM shopping_lists WHERE id = shopping_list_items.list_id AND user_id = auth.uid())
+  );
+CREATE POLICY "Users can delete own shopping_list_items" ON shopping_list_items
+  FOR DELETE USING (
+    EXISTS (SELECT 1 FROM shopping_lists WHERE id = shopping_list_items.list_id AND user_id = auth.uid())
+  );
 
 -- ============================================
 -- FIN DEL SCRIPT
