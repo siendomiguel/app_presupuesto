@@ -2,7 +2,7 @@ import { z } from "zod"
 
 export const transactionItemSchema = z.object({
     name: z.string().min(1, "El nombre es requerido"),
-    quantity: z.number().positive("La cantidad debe ser mayor a 0"),
+    quantity: z.number().int("La cantidad debe ser un numero entero").positive("La cantidad debe ser mayor a 0"),
     unit_price: z.number().positive("El precio debe ser mayor a 0"),
 })
 

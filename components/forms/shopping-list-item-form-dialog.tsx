@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { shoppingListItemSchema, type ShoppingListItemFormValues } from "@/lib/validations/shopping-list"
@@ -53,6 +54,10 @@ export function ShoppingListItemFormDialog({
     const { categories } = useCategories(user?.id, "expense")
     const isEditing = !!item
 
+    const defaultCategoryId = categories.find(c =>
+        c.name.toLowerCase() === "alimentación" || c.name.toLowerCase() === "alimentacion"
+    )?.id ?? null
+
     const form = useForm<ShoppingListItemFormValues>({
         resolver: zodResolver(shoppingListItemSchema),
         defaultValues: item
@@ -66,9 +71,42 @@ export function ShoppingListItemFormDialog({
                 name: "",
                 quantity: 1,
                 unit_price: null,
-                category_id: null,
+                category_id: defaultCategoryId,
             },
     })
+
+    // Reset form when dialog opens
+    useEffect(() => {
+        if (!open) return
+        if (item) {
+            form.reset({
+                name: item.name,
+                quantity: item.quantity,
+                unit_price: item.unit_price,
+                category_id: item.category_id,
+            })
+        } else {
+            form.reset({
+                name: "",
+                quantity: 1,
+                unit_price: null,
+                category_id: defaultCategoryId,
+            })
+        }
+    }, [open, item])
+
+    // Set default category when categories load (async) for new items
+    const categoryInitialized = useRef(false)
+    useEffect(() => {
+        if (!isEditing && defaultCategoryId && !categoryInitialized.current && !form.getValues("category_id")) {
+            form.setValue("category_id", defaultCategoryId)
+            categoryInitialized.current = true
+        }
+    }, [defaultCategoryId, isEditing, form])
+
+    useEffect(() => {
+        if (open && !isEditing) categoryInitialized.current = false
+    }, [open, isEditing])
 
     const onSubmit = async (values: ShoppingListItemFormValues) => {
         try {

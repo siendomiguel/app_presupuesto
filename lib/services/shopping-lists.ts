@@ -118,6 +118,38 @@ class ShoppingListsService {
         return list
     }
 
+    async duplicateShoppingList(listId: string, userId: string) {
+        // Get original list
+        const { list, items } = await this.getShoppingListWithItems(listId)
+
+        // Create new list
+        const newList = await this.createShoppingList({
+            user_id: userId,
+            name: `${list.name} (copia)`,
+        })
+
+        // Copy items (unchecked)
+        if (items.length > 0) {
+            const newItems = items.map(item => ({
+                list_id: newList.id,
+                name: item.name,
+                quantity: item.quantity,
+                unit_price: item.unit_price,
+                category_id: item.category_id,
+                checked: false,
+                position: item.position,
+            }))
+
+            const { error } = await this.supabase
+                .from('shopping_list_items')
+                .insert(newItems as any)
+
+            if (error) throw error
+        }
+
+        return newList
+    }
+
     async deleteShoppingList(id: string) {
         const { error } = await this.supabase
             .from('shopping_lists')

@@ -502,9 +502,15 @@ export function TransactionFormDialog({
                                                     />
                                                     <Input
                                                         type="number"
-                                                        step="0.01"
-                                                        min="0.01"
-                                                        {...form.register(`items.${index}.quantity`, { valueAsNumber: true })}
+                                                        step="1"
+                                                        min="1"
+                                                        {...form.register(`items.${index}.quantity`, {
+                                                            valueAsNumber: true,
+                                                            setValueAs: (v: string) => {
+                                                                const n = parseInt(v, 10)
+                                                                return isNaN(n) || n < 1 ? 1 : n
+                                                            },
+                                                        })}
                                                         className="h-8 text-sm tabular-nums"
                                                     />
                                                     <CurrencyInput
@@ -541,12 +547,27 @@ export function TransactionFormDialog({
                                     Agregar item
                                 </Button>
 
-                                {fields.length > 0 && (
-                                    <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-2 px-1">
-                                        <span>Total items: <span className="font-medium text-foreground">{formatCurrency(itemsTotal, watchedCurrency)}</span></span>
-                                        <span>Monto transaccion: <span className="font-medium text-foreground">{formatCurrency(transactionAmount, watchedCurrency)}</span></span>
-                                    </div>
-                                )}
+                                {fields.length > 0 && (() => {
+                                    const match = itemsTotal === transactionAmount
+                                    const diff = transactionAmount - itemsTotal
+                                    const matchClass = match ? "text-[hsl(158,64%,42%)]" : "text-foreground"
+                                    return (
+                                        <div className="border-t pt-2 px-1 space-y-1">
+                                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                                <span>Total items: <span className={`font-medium ${matchClass}`}>{formatCurrency(itemsTotal, watchedCurrency)}</span></span>
+                                                <span>Monto transaccion: <span className={`font-medium ${matchClass}`}>{formatCurrency(transactionAmount, watchedCurrency)}</span></span>
+                                            </div>
+                                            {!match && (
+                                                <div className="text-xs">
+                                                    <span className="text-muted-foreground">Diferencia: </span>
+                                                    <span className="font-medium text-[hsl(var(--destructive))]">
+                                                        {diff > 0 ? `Faltan ${formatCurrency(diff, watchedCurrency)}` : `Excede ${formatCurrency(Math.abs(diff), watchedCurrency)}`}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )
+                                })()}
                             </CollapsibleContent>
                         </Collapsible>
 

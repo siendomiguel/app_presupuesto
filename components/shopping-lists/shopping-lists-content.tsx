@@ -15,6 +15,7 @@ import ShoppingCart from "lucide-react/dist/esm/icons/shopping-cart"
 import MoreVertical from "lucide-react/dist/esm/icons/more-vertical"
 import Pencil from "lucide-react/dist/esm/icons/pencil"
 import Trash2 from "lucide-react/dist/esm/icons/trash-2"
+import Copy from "lucide-react/dist/esm/icons/copy"
 import { toast } from "sonner"
 import type { ShoppingListWithCounts } from "@/lib/services/shopping-lists"
 import {
@@ -52,6 +53,18 @@ export function ShoppingListsContent() {
         } finally {
             setDeleting(false)
             setDeleteTarget(null)
+        }
+    }
+
+    const handleDuplicate = async (list: ShoppingListWithCounts, e: React.MouseEvent) => {
+        e.stopPropagation()
+        if (!user) return
+        try {
+            await shoppingListsService.duplicateShoppingList(list.id, user.id)
+            toast.success("Lista duplicada")
+            refetch()
+        } catch {
+            toast.error("Error al duplicar la lista")
         }
     }
 
@@ -128,6 +141,10 @@ export function ShoppingListsContent() {
                                                 <DropdownMenuItem onClick={(e) => handleEdit(list, e)}>
                                                     <Pencil className="h-4 w-4 mr-2" />
                                                     Editar
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={(e) => handleDuplicate(list, e)}>
+                                                    <Copy className="h-4 w-4 mr-2" />
+                                                    Duplicar
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem
                                                     className="text-destructive"
