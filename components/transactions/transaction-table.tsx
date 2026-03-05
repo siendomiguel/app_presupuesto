@@ -64,6 +64,7 @@ export function TransactionTable({ transactions, loading, onEdit, onDelete, onVi
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
     const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
     const didLongPress = useRef(false)
+    const didDropdownAction = useRef(false)
 
     const startLongPress = (id: string) => {
         if (selectionMode) return
@@ -86,11 +87,25 @@ export function TransactionTable({ transactions, loading, onEdit, onDelete, onVi
             didLongPress.current = false
             return
         }
+        if (didDropdownAction.current) {
+            didDropdownAction.current = false
+            return
+        }
         if (selectionMode) {
             onToggleSelect?.(tx.id)
         } else {
             onView?.(tx)
         }
+    }
+
+    const handleDropdownEdit = (tx: Transaction) => {
+        didDropdownAction.current = true
+        onEdit(tx)
+    }
+
+    const handleDropdownDelete = (tx: Transaction) => {
+        didDropdownAction.current = true
+        onDelete(tx)
     }
 
     const toggleRow = (id: string) => {
@@ -201,11 +216,11 @@ export function TransactionTable({ transactions, loading, onEdit, onDelete, onVi
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onClick={() => onEdit(tx)} className="gap-2">
+                                        <DropdownMenuItem onClick={() => handleDropdownEdit(tx)} className="gap-2">
                                             <Pencil className="h-4 w-4" />
                                             Editar
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => onDelete(tx)} className="gap-2 text-destructive">
+                                        <DropdownMenuItem onClick={() => handleDropdownDelete(tx)} className="gap-2 text-destructive">
                                             <Trash2 className="h-4 w-4" />
                                             Eliminar
                                         </DropdownMenuItem>
