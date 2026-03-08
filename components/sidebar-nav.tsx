@@ -10,6 +10,7 @@ import CreditCard from "lucide-react/dist/esm/icons/credit-card"
 import Package from "lucide-react/dist/esm/icons/package"
 import ShoppingCart from "lucide-react/dist/esm/icons/shopping-cart"
 import HelpCircle from "lucide-react/dist/esm/icons/help-circle"
+import Sparkles from "lucide-react/dist/esm/icons/sparkles"
 import LogOut from "lucide-react/dist/esm/icons/log-out"
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left"
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right"
@@ -30,6 +31,7 @@ const navItems: { label: string; icon: typeof LayoutDashboard; href: string; fea
   { label: "Presupuestos", icon: Target, href: "/budgets", feature: "budgets" },
   { label: "Reportes", icon: PieChart, href: "/reports", feature: "reports" },
   { label: "Tarjetas", icon: CreditCard, href: "/cards", feature: "cards" },
+  { label: "IA Insights", icon: Sparkles, href: "/ai-insights", feature: "ai_insights" },
   { label: "Ajustes", icon: Settings, href: "/settings", feature: "settings" },
   { label: "Ayuda", icon: HelpCircle, href: "/help", feature: "help" },
 ]

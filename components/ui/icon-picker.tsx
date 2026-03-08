@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { ICON_REGISTRY, ICON_MAP } from "@/lib/icons"
+import { useState, useMemo } from "react"
+import { ICON_REGISTRY, ICON_MAP, ICON_CATEGORY_LABELS, type IconCategory } from "@/lib/icons"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,8 @@ import Search from "lucide-react/dist/esm/icons/search"
 import CircleDot from "lucide-react/dist/esm/icons/circle-dot"
 import X from "lucide-react/dist/esm/icons/x"
 
+const categories = Object.entries(ICON_CATEGORY_LABELS) as [IconCategory, string][]
+
 interface IconPickerProps {
     value: string | null | undefined
     onChange: (value: string | null) => void
@@ -19,17 +21,26 @@ interface IconPickerProps {
 export function IconPicker({ value, onChange }: IconPickerProps) {
     const [open, setOpen] = useState(false)
     const [search, setSearch] = useState("")
+    const [activeCategory, setActiveCategory] = useState<IconCategory | null>(null)
 
-    const filtered = search.trim()
-        ? ICON_REGISTRY.filter(entry => {
+    const filtered = useMemo(() => {
+        let result = ICON_REGISTRY
+
+        if (activeCategory) {
+            result = result.filter(e => e.category === activeCategory)
+        }
+
+        if (search.trim()) {
             const q = search.toLowerCase()
-            return (
+            result = result.filter(entry =>
                 entry.name.includes(q) ||
                 entry.label.toLowerCase().includes(q) ||
                 entry.keywords.some(k => k.includes(q))
             )
-        })
-        : ICON_REGISTRY
+        }
+
+        return result
+    }, [search, activeCategory])
 
     const SelectedIcon = value ? ICON_MAP[value] : null
 
@@ -50,7 +61,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
                     )}
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[290px] p-3" align="start">
+            <PopoverContent className="w-[340px] p-3" align="start">
                 <div className="relative mb-2">
                     <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                     <Input
@@ -60,11 +71,40 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
                         className="pl-8 h-9 text-sm"
                     />
                 </div>
-                <ScrollArea className="h-[240px]">
+                <div className="flex flex-wrap gap-1 mb-2">
+                    <button
+                        type="button"
+                        className={cn(
+                            "px-2 py-0.5 rounded-full text-[11px] font-medium transition-colors",
+                            !activeCategory
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted text-muted-foreground hover:bg-accent"
+                        )}
+                        onClick={() => setActiveCategory(null)}
+                    >
+                        Todos
+                    </button>
+                    {categories.map(([key, label]) => (
+                        <button
+                            key={key}
+                            type="button"
+                            className={cn(
+                                "px-2 py-0.5 rounded-full text-[11px] font-medium transition-colors",
+                                activeCategory === key
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-muted text-muted-foreground hover:bg-accent"
+                            )}
+                            onClick={() => setActiveCategory(activeCategory === key ? null : key)}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </div>
+                <ScrollArea className="h-[260px]">
                     {filtered.length === 0 ? (
                         <p className="text-sm text-muted-foreground text-center py-6">No se encontraron iconos</p>
                     ) : (
-                        <div className="grid grid-cols-6 gap-1">
+                        <div className="grid grid-cols-7 gap-1">
                             {filtered.map(entry => {
                                 const Icon = entry.component
                                 const isSelected = value === entry.name
@@ -82,6 +122,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
                                             onChange(entry.name)
                                             setOpen(false)
                                             setSearch("")
+                                            setActiveCategory(null)
                                         }}
                                     >
                                         <Icon className="h-4 w-4" />
@@ -100,6 +141,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
                             onChange(null)
                             setOpen(false)
                             setSearch("")
+                            setActiveCategory(null)
                         }}
                     >
                         <X className="h-3.5 w-3.5" />

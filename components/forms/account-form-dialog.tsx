@@ -8,12 +8,12 @@ import { useUser } from "@/hooks/use-user"
 import { toast } from "sonner"
 
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-} from "@/components/ui/dialog"
+    FloatingPanel,
+    FloatingPanelContent,
+    FloatingPanelHeader,
+    FloatingPanelTitle,
+    FloatingPanelDescription,
+} from "@/components/ui/floating-panel"
 import {
     Form,
     FormControl,
@@ -93,16 +93,16 @@ export function AccountFormDialog({
     }
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[450px]">
-                <DialogHeader>
-                    <DialogTitle>{isEditing ? "Editar cuenta" : "Nueva cuenta"}</DialogTitle>
-                    <DialogDescription>
+        <FloatingPanel open={open} onOpenChange={onOpenChange}>
+            <FloatingPanelContent size="md">
+                <FloatingPanelHeader>
+                    <FloatingPanelTitle>{isEditing ? "Editar cuenta" : "Nueva cuenta"}</FloatingPanelTitle>
+                    <FloatingPanelDescription>
                         {isEditing
                             ? "El balance se actualiza con cada transaccion. Usa ajustar saldo para corregir diferencias."
                             : "Ingresa el saldo actual de la cuenta."}
-                    </DialogDescription>
-                </DialogHeader>
+                    </FloatingPanelDescription>
+                </FloatingPanelHeader>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <FormField
@@ -182,7 +182,7 @@ export function AccountFormDialog({
                         </div>
                     </form>
                 </Form>
-            </DialogContent>
-        </Dialog>
+            </FloatingPanelContent>
+        </FloatingPanel>
     )
 }

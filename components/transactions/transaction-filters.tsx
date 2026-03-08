@@ -112,7 +112,7 @@ export function TransactionFilters({
             </div>
 
             {/* Date range row */}
-            <div className="grid grid-cols-[1fr_1fr_auto] gap-2 sm:flex sm:gap-3 sm:items-center">
+            <div className="grid grid-cols-[1fr_1fr] gap-2 sm:flex sm:gap-3 sm:items-center">
                 <Input
                     type="date"
                     value={startDate}
@@ -131,11 +131,10 @@ export function TransactionFilters({
                     variant={isCurrentMonth ? "default" : "outline"}
                     size="sm"
                     onClick={handleCurrentMonth}
-                    className="gap-1.5 whitespace-nowrap"
+                    className="col-span-2 sm:col-span-1 gap-1.5 whitespace-nowrap"
                 >
                     <CalendarDays className="h-4 w-4" />
-                    <span className="hidden sm:inline">Mes actual</span>
-                    <span className="sm:hidden">Mes</span>
+                    Mes actual
                 </Button>
             </div>
 

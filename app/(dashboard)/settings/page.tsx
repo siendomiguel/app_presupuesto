@@ -1,11 +1,18 @@
 "use client"
 
+import { useSearchParams } from "next/navigation"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProfileSettings } from "@/components/settings/profile-settings"
 import { CategoriesSettings } from "@/components/settings/categories-settings"
 import { AccountsSettings } from "@/components/settings/accounts-settings"
 
+const validTabs = ["profile", "categories", "accounts"]
+
 export default function SettingsPage() {
+    const searchParams = useSearchParams()
+    const tabParam = searchParams.get("tab")
+    const defaultTab = tabParam && validTabs.includes(tabParam) ? tabParam : "profile"
+
     return (
         <>
             <div className="mb-6">
@@ -15,7 +22,7 @@ export default function SettingsPage() {
                 </p>
             </div>
 
-            <Tabs defaultValue="profile" className="space-y-6">
+            <Tabs defaultValue={defaultTab} key={defaultTab} className="space-y-6">
                 <TabsList>
                     <TabsTrigger value="profile">Perfil</TabsTrigger>
                     <TabsTrigger value="categories">Categorias</TabsTrigger>

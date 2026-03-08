@@ -16,11 +16,11 @@ import { format } from "date-fns"
 import { formatCurrency } from "@/lib/format"
 
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
+    FloatingPanel,
+    FloatingPanelContent,
+    FloatingPanelHeader,
+    FloatingPanelTitle,
+} from "@/components/ui/floating-panel"
 import {
     Form,
     FormControl,
@@ -241,11 +241,11 @@ export function TransactionFormDialog({
     }
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>{isEditing ? "Editar transaccion" : "Nueva transaccion"}</DialogTitle>
-                </DialogHeader>
+        <FloatingPanel open={open} onOpenChange={onOpenChange}>
+            <FloatingPanelContent size="lg">
+                <FloatingPanelHeader>
+                    <FloatingPanelTitle>{isEditing ? "Editar transaccion" : "Nueva transaccion"}</FloatingPanelTitle>
+                </FloatingPanelHeader>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <FormField
@@ -581,7 +581,7 @@ export function TransactionFormDialog({
                         </div>
                     </form>
                 </Form>
-            </DialogContent>
-        </Dialog>
+            </FloatingPanelContent>
+        </FloatingPanel>
     )
 }

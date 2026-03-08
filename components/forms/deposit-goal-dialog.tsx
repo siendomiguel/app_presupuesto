@@ -8,11 +8,11 @@ import { toast } from "sonner"
 import { formatCurrency } from "@/lib/format"
 
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
+    FloatingPanel,
+    FloatingPanelContent,
+    FloatingPanelHeader,
+    FloatingPanelTitle,
+} from "@/components/ui/floating-panel"
 import {
     Form,
     FormControl,
@@ -59,11 +59,11 @@ export function DepositGoalDialog({ open, onOpenChange, goal, onSuccess }: Depos
     if (!goal) return null
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[380px]">
-                <DialogHeader>
-                    <DialogTitle>Depositar a "{goal.name}"</DialogTitle>
-                </DialogHeader>
+        <FloatingPanel open={open} onOpenChange={onOpenChange}>
+            <FloatingPanelContent size="sm">
+                <FloatingPanelHeader>
+                    <FloatingPanelTitle>Depositar a "{goal.name}"</FloatingPanelTitle>
+                </FloatingPanelHeader>
 
                 <div className="space-y-2 mb-2">
                     <div className="flex justify-between text-sm">
@@ -98,7 +98,7 @@ export function DepositGoalDialog({ open, onOpenChange, goal, onSuccess }: Depos
                         </div>
                     </form>
                 </Form>
-            </DialogContent>
-        </Dialog>
+            </FloatingPanelContent>
+        </FloatingPanel>
     )
 }

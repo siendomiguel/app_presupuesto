@@ -11,6 +11,7 @@ export type Feature =
   | 'help'
   | 'csv_export'
   | 'grocery_list'
+  | 'ai_insights'
 
 const FREE_FEATURES: Feature[] = [
   'dashboard',
@@ -22,6 +23,7 @@ const FREE_FEATURES: Feature[] = [
   'settings',
   'help',
   'csv_export',
+  'ai_insights',
 ]
 
 const PRO_FEATURES: Feature[] = [

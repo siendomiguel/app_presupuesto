@@ -2,13 +2,13 @@
 
 import { useState } from "react"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
+    FloatingPanel,
+    FloatingPanelContent,
+    FloatingPanelDescription,
+    FloatingPanelFooter,
+    FloatingPanelHeader,
+    FloatingPanelTitle,
+} from "@/components/ui/floating-panel"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -97,14 +97,14 @@ export function MergeTransactionsDialog({
     }
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>Agrupar transacciones</DialogTitle>
-                    <DialogDescription>
+        <FloatingPanel open={open} onOpenChange={onOpenChange}>
+            <FloatingPanelContent size="lg">
+                <FloatingPanelHeader>
+                    <FloatingPanelTitle>Agrupar transacciones</FloatingPanelTitle>
+                    <FloatingPanelDescription>
                         Se creara una nueva transaccion con {transactions.length} items y se eliminaran las originales.
-                    </DialogDescription>
-                </DialogHeader>
+                    </FloatingPanelDescription>
+                </FloatingPanelHeader>
 
                 {/* Summary */}
                 <div className="grid grid-cols-2 gap-3 text-sm">
@@ -162,15 +162,15 @@ export function MergeTransactionsDialog({
                     </div>
                 </div>
 
-                <DialogFooter className="gap-2 sm:gap-0">
+                <FloatingPanelFooter className="gap-2 sm:gap-0">
                     <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
                         Cancelar
                     </Button>
                     <Button onClick={handleMerge} disabled={loading}>
                         {loading ? "Agrupando..." : `Agrupar ${transactions.length} transacciones`}
                     </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                </FloatingPanelFooter>
+            </FloatingPanelContent>
+        </FloatingPanel>
     )
 }

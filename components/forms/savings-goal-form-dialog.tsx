@@ -10,11 +10,11 @@ import { useAccounts } from "@/hooks/use-accounts"
 import { toast } from "sonner"
 
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
+    FloatingPanel,
+    FloatingPanelContent,
+    FloatingPanelHeader,
+    FloatingPanelTitle,
+} from "@/components/ui/floating-panel"
 import {
     Form,
     FormControl,
@@ -130,11 +130,11 @@ export function SavingsGoalFormDialog({ open, onOpenChange, goal, onSuccess }: S
     }
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[420px]">
-                <DialogHeader>
-                    <DialogTitle>{isEditing ? "Editar meta" : "Nueva meta de ahorro"}</DialogTitle>
-                </DialogHeader>
+        <FloatingPanel open={open} onOpenChange={onOpenChange}>
+            <FloatingPanelContent size="sm">
+                <FloatingPanelHeader>
+                    <FloatingPanelTitle>{isEditing ? "Editar meta" : "Nueva meta de ahorro"}</FloatingPanelTitle>
+                </FloatingPanelHeader>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <FormField control={form.control} name="name" render={({ field }) => (
@@ -227,7 +227,7 @@ export function SavingsGoalFormDialog({ open, onOpenChange, goal, onSuccess }: S
                         </div>
                     </form>
                 </Form>
-            </DialogContent>
-        </Dialog>
+            </FloatingPanelContent>
+        </FloatingPanel>
     )
 }

@@ -36,6 +36,7 @@ import CreditCard from "lucide-react/dist/esm/icons/credit-card"
 import Package from "lucide-react/dist/esm/icons/package"
 import ShoppingCart from "lucide-react/dist/esm/icons/shopping-cart"
 import HelpCircle from "lucide-react/dist/esm/icons/help-circle"
+import Sparkles from "lucide-react/dist/esm/icons/sparkles"
 import BellOff from "lucide-react/dist/esm/icons/bell-off"
 import Link from "next/link"
 import Image from "next/image"
@@ -54,6 +55,7 @@ const mobileNavItems = [
   { label: "Presupuestos", icon: Target, href: "/budgets" },
   { label: "Reportes", icon: PieChart, href: "/reports" },
   { label: "Tarjetas", icon: CreditCard, href: "/cards" },
+  { label: "IA Insights", icon: Sparkles, href: "/ai-insights" },
   { label: "Ajustes", icon: Settings, href: "/settings" },
   { label: "Ayuda", icon: HelpCircle, href: "/help" },
 ]
@@ -81,7 +83,6 @@ export function DashboardHeader({ menuOpen: menuOpenProp, onMenuOpenChange }: Da
 
   // Notifications state
   const [notifOpen, setNotifOpen] = useState(false)
-  const [notifDismissed, setNotifDismissed] = useState(false)
 
   const initials = user?.user_metadata?.full_name
     ? user.user_metadata.full_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
@@ -178,13 +179,10 @@ export function DashboardHeader({ menuOpen: menuOpenProp, onMenuOpenChange }: Da
 
           <ThemeSwitcher />
 
-          <Popover open={notifOpen} onOpenChange={(open) => { setNotifOpen(open); if (open) setNotifDismissed(true) }}>
+          <Popover open={notifOpen} onOpenChange={setNotifOpen}>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
-                {!notifDismissed && (
-                  <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[hsl(var(--destructive))]" />
-                )}
                 <span className="sr-only">Notificaciones</span>
               </Button>
             </PopoverTrigger>
@@ -220,6 +218,9 @@ export function DashboardHeader({ menuOpen: menuOpenProp, onMenuOpenChange }: Da
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/settings">Perfil</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings?tab=accounts">Cuentas</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/settings">Configuracion</Link>

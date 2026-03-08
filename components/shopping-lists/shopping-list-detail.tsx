@@ -27,7 +27,7 @@ interface GroupedItems {
 }
 
 export function ShoppingListDetail({ listId, onBack }: ShoppingListDetailProps) {
-    const { list, items, loading, refetch } = useShoppingListDetail(listId)
+    const { list, items, setItems, loading, refetch } = useShoppingListDetail(listId)
 
     const [itemFormOpen, setItemFormOpen] = useState(false)
     const [editingItem, setEditingItem] = useState<ShoppingListItem | null>(null)
@@ -87,10 +87,14 @@ export function ShoppingListDetail({ listId, onBack }: ShoppingListDetailProps) 
     }, 0)
 
     const handleToggle = async (item: ShoppingListItem) => {
+        const newChecked = !item.checked
+        // Optimistic update — toggle locally without refetching
+        setItems(prev => prev.map(i => i.id === item.id ? { ...i, checked: newChecked } : i))
         try {
-            await shoppingListsService.toggleItemChecked(item.id, !item.checked)
-            refetch()
+            await shoppingListsService.toggleItemChecked(item.id, newChecked)
         } catch {
+            // Revert on error
+            setItems(prev => prev.map(i => i.id === item.id ? { ...i, checked: !newChecked } : i))
             toast.error("Error al actualizar el item")
         }
     }

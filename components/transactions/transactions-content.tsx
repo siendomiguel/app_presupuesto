@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useUser } from "@/hooks/use-user"
 import { useTransactions } from "@/hooks/use-transactions"
@@ -76,6 +76,7 @@ export function TransactionsContent() {
 
     // Detail sheet state
     const [viewingTransaction, setViewingTransaction] = useState<Transaction | null>(null)
+    const actionGuard = useRef(0)
 
     // Selection / merge state
     const [selectionMode, setSelectionMode] = useState(false)
@@ -151,6 +152,8 @@ export function TransactionsContent() {
     }
 
     const handleEdit = (tx: Transaction) => {
+        actionGuard.current = Date.now()
+        setViewingTransaction(null)
         setEditingTransaction(tx)
         setFormOpen(true)
     }
@@ -251,8 +254,8 @@ export function TransactionsContent() {
                 transactions={filteredTransactions}
                 loading={loading}
                 onEdit={handleEdit}
-                onDelete={setDeleteTarget}
-                onView={setViewingTransaction}
+                onDelete={(tx) => { actionGuard.current = Date.now(); setDeleteTarget(tx) }}
+                onView={(tx) => { if (Date.now() - actionGuard.current > 200) setViewingTransaction(tx) }}
                 selectionMode={selectionMode}
                 selectedIds={selectedIds}
                 onToggleSelect={toggleSelect}
@@ -311,7 +314,7 @@ export function TransactionsContent() {
 
             <TransactionDetailSheet
                 transaction={viewingTransaction}
-                open={!!viewingTransaction}
+                open={!!viewingTransaction && !formOpen}
                 onOpenChange={(open) => { if (!open) setViewingTransaction(null) }}
                 onEdit={handleEdit}
                 onDelete={setDeleteTarget}

@@ -77,5 +77,5 @@ export function useShoppingListDetail(listId: string | null) {
         fetchDetail()
     }, [listId, refreshKey])
 
-    return { list, items, loading, error, refetch }
+    return { list, items, setItems, loading, error, refetch }
 }

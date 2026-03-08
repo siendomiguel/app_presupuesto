@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { Fragment, useState, useRef } from "react"
 import {
     Table,
     TableBody,
@@ -23,6 +23,7 @@ import Pencil from "lucide-react/dist/esm/icons/pencil"
 import Trash2 from "lucide-react/dist/esm/icons/trash-2"
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right"
 import ListOrdered from "lucide-react/dist/esm/icons/list-ordered"
+import Target from "lucide-react/dist/esm/icons/target"
 import { formatCurrency, parseLocalDate } from "@/lib/format"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -33,6 +34,7 @@ import type { TransactionItem } from "@/lib/services/transactions"
 type Transaction = Database['public']['Tables']['transactions']['Row'] & {
     category?: Database['public']['Tables']['categories']['Row']
     account?: Database['public']['Tables']['accounts']['Row']
+    budget?: Database['public']['Tables']['budgets']['Row']
     items?: TransactionItem[]
 }
 
@@ -195,6 +197,15 @@ export function TransactionTable({ transactions, loading, onEdit, onDelete, onVi
                                             <span className="truncate">{tx.account.name}</span>
                                         </>
                                     )}
+                                    {tx.budget && (
+                                        <>
+                                            <span className="text-border">·</span>
+                                            <span className="inline-flex items-center gap-0.5 text-[hsl(199,89%,48%)]">
+                                                <Target className="h-3 w-3" />
+                                                <span className="truncate">{tx.budget.name}</span>
+                                            </span>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                             <div className="flex items-center gap-1 shrink-0">
@@ -215,7 +226,7 @@ export function TransactionTable({ transactions, loading, onEdit, onDelete, onVi
                                             <MoreHorizontal className="h-4 w-4" />
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
+                                    <DropdownMenuContent align="end" onCloseAutoFocus={(e) => e.preventDefault()}>
                                         <DropdownMenuItem onClick={() => handleDropdownEdit(tx)} className="gap-2">
                                             <Pencil className="h-4 w-4" />
                                             Editar
@@ -264,6 +275,7 @@ export function TransactionTable({ transactions, loading, onEdit, onDelete, onVi
                         <TableHead>Categoria</TableHead>
                         <TableHead>Cuenta</TableHead>
                         <TableHead>Tipo</TableHead>
+                        <TableHead>Presupuesto</TableHead>
                         <TableHead className="text-right">Monto</TableHead>
                         <TableHead className="w-[50px]"></TableHead>
                     </TableRow>
@@ -275,9 +287,8 @@ export function TransactionTable({ transactions, loading, onEdit, onDelete, onVi
                         const isExpanded = expandedRows.has(tx.id)
                         const isSelected = selectedIds?.has(tx.id)
                         return (
-                            <>
+                            <Fragment key={tx.id}>
                                 <TableRow
-                                    key={tx.id}
                                     className={cn(
                                         "cursor-pointer select-none",
                                         isSelected && "bg-primary/5"
@@ -326,6 +337,16 @@ export function TransactionTable({ transactions, loading, onEdit, onDelete, onVi
                                             {typeLabels[tx.type]}
                                         </Badge>
                                     </TableCell>
+                                    <TableCell className="text-muted-foreground">
+                                        {tx.budget ? (
+                                            <span className="inline-flex items-center gap-1 text-xs text-[hsl(199,89%,48%)]">
+                                                <Target className="h-3.5 w-3.5" />
+                                                {tx.budget.name}
+                                            </span>
+                                        ) : (
+                                            <span className="text-muted-foreground/40">—</span>
+                                        )}
+                                    </TableCell>
                                     <TableCell className={cn(
                                         "text-right font-semibold tabular-nums",
                                         isIncome ? "text-[hsl(158,64%,42%)]" : "text-foreground"
@@ -339,12 +360,12 @@ export function TransactionTable({ transactions, loading, onEdit, onDelete, onVi
                                                     <MoreHorizontal className="h-4 w-4" />
                                                 </Button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={() => onEdit(tx)} className="gap-2">
+                                            <DropdownMenuContent align="end" onCloseAutoFocus={(e) => e.preventDefault()}>
+                                                <DropdownMenuItem onClick={() => handleDropdownEdit(tx)} className="gap-2">
                                                     <Pencil className="h-4 w-4" />
                                                     Editar
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => onDelete(tx)} className="gap-2 text-destructive">
+                                                <DropdownMenuItem onClick={() => handleDropdownDelete(tx)} className="gap-2 text-destructive">
                                                     <Trash2 className="h-4 w-4" />
                                                     Eliminar
                                                 </DropdownMenuItem>
@@ -354,7 +375,7 @@ export function TransactionTable({ transactions, loading, onEdit, onDelete, onVi
                                 </TableRow>
                                 {hasItems && isExpanded && (
                                     <TableRow key={`${tx.id}-items`} className="bg-muted/30 hover:bg-muted/30">
-                                        <TableCell colSpan={selectionMode ? 9 : 8} className="py-2 px-4">
+                                        <TableCell colSpan={selectionMode ? 10 : 9} className="py-2 px-4">
                                             <div className="ml-6 space-y-1">
                                                 <div className="grid grid-cols-[1fr_60px_90px_90px] gap-2 text-[10px] uppercase tracking-wider text-muted-foreground font-medium pb-1 border-b border-border/50">
                                                     <span>Item</span>
@@ -382,7 +403,7 @@ export function TransactionTable({ transactions, loading, onEdit, onDelete, onVi
                                         </TableCell>
                                     </TableRow>
                                 )}
-                            </>
+                            </Fragment>
                         )
                     })}
                 </TableBody>

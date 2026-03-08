@@ -1,11 +1,11 @@
 "use client"
 
 import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-} from "@/components/ui/sheet"
+    FloatingPanel,
+    FloatingPanelContent,
+    FloatingPanelHeader,
+    FloatingPanelTitle,
+} from "@/components/ui/floating-panel"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
@@ -58,12 +58,12 @@ export function TransactionDetailSheet({
     const hasItems = tx.items && tx.items.length > 0
 
     return (
-        <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col">
-                <SheetHeader className="px-5 pt-5 pb-0">
+        <FloatingPanel open={open} onOpenChange={onOpenChange}>
+            <FloatingPanelContent size="md" className="p-0 flex flex-col max-h-[85vh]">
+                <FloatingPanelHeader className="px-5 pt-5 pb-0">
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
-                            <SheetTitle className="text-lg leading-tight">{tx.description}</SheetTitle>
+                            <FloatingPanelTitle className="text-lg leading-tight">{tx.description}</FloatingPanelTitle>
                             <div className="flex items-center gap-2 mt-1.5">
                                 <Badge variant="outline" className={cn("text-xs", typeColors[tx.type])}>
                                     {typeLabels[tx.type]}
@@ -74,7 +74,7 @@ export function TransactionDetailSheet({
                             </div>
                         </div>
                     </div>
-                </SheetHeader>
+                </FloatingPanelHeader>
 
                 <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
                     {/* Amount */}
@@ -153,8 +153,8 @@ export function TransactionDetailSheet({
                         Eliminar
                     </Button>
                 </div>
-            </SheetContent>
-        </Sheet>
+            </FloatingPanelContent>
+        </FloatingPanel>
     )
 }
 

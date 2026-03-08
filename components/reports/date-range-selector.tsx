@@ -62,38 +62,40 @@ export function DateRangeSelector({
     onEndDateChange,
 }: DateRangeSelectorProps) {
     return (
-        <div className="flex flex-wrap items-center gap-2">
-            {presets.map((preset) => {
-                const range = preset.getRange()
-                const isActive = startDate === range.start && endDate === range.end
-                return (
-                    <Button
-                        key={preset.label}
-                        variant={isActive ? "default" : "outline"}
-                        size="sm"
-                        className={cn("text-xs", !isActive && "text-muted-foreground")}
-                        onClick={() => {
-                            onStartDateChange(range.start)
-                            onEndDateChange(range.end)
-                        }}
-                    >
-                        {preset.label}
-                    </Button>
-                )
-            })}
-            <div className="flex items-center gap-2 ml-auto">
+        <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap gap-2">
+                {presets.map((preset) => {
+                    const range = preset.getRange()
+                    const isActive = startDate === range.start && endDate === range.end
+                    return (
+                        <Button
+                            key={preset.label}
+                            variant={isActive ? "default" : "outline"}
+                            size="sm"
+                            className={cn("text-xs", !isActive && "text-muted-foreground")}
+                            onClick={() => {
+                                onStartDateChange(range.start)
+                                onEndDateChange(range.end)
+                            }}
+                        >
+                            {preset.label}
+                        </Button>
+                    )
+                })}
+            </div>
+            <div className="flex items-center gap-2">
                 <Input
                     type="date"
                     value={startDate}
                     onChange={(e) => onStartDateChange(e.target.value)}
-                    className="w-[140px] h-8 text-xs"
+                    className="flex-1 sm:w-[150px] sm:flex-initial h-8 text-xs"
                 />
                 <span className="text-xs text-muted-foreground">a</span>
                 <Input
                     type="date"
                     value={endDate}
                     onChange={(e) => onEndDateChange(e.target.value)}
-                    className="w-[140px] h-8 text-xs"
+                    className="flex-1 sm:w-[150px] sm:flex-initial h-8 text-xs"
                 />
             </div>
         </div>

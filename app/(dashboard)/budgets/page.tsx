@@ -11,11 +11,11 @@ import { TransactionTable } from "@/components/transactions/transaction-table"
 import { budgetsService } from "@/lib/services/budgets"
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
+    FloatingPanel,
+    FloatingPanelContent,
+    FloatingPanelHeader,
+    FloatingPanelTitle,
+} from "@/components/ui/floating-panel"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import Plus from "lucide-react/dist/esm/icons/plus"
 import { toast } from "sonner"
@@ -137,32 +137,33 @@ export default function BudgetsPage() {
                 loading={deleting}
             />
 
-            <Dialog open={!!selectedBudget} onOpenChange={(open) => { if (!open) setSelectedBudget(null) }}>
-                <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
-                    <DialogHeader>
-                        <DialogTitle>{selectedBudget?.name} — Transacciones</DialogTitle>
+            <FloatingPanel open={!!selectedBudget} onOpenChange={(open) => { if (!open) setSelectedBudget(null) }}>
+                <FloatingPanelContent size="5xl" className="max-h-[85vh] flex flex-col">
+                    <FloatingPanelHeader>
+                        <FloatingPanelTitle>{selectedBudget?.name} — Transacciones</FloatingPanelTitle>
                         {selectedBudget && (
-                            <p className="text-sm text-muted-foreground">
+                            <div className="text-sm text-muted-foreground space-y-0.5">
                                 {selectedBudget.amount_usd > 0 && (
-                                    <span>Gastado {formatCurrency(selectedBudget.spent_usd, "USD")} de {formatCurrency(selectedBudget.amount_usd, "USD")}</span>
+                                    <p>Gastado {formatCurrency(selectedBudget.spent_usd, "USD")} de {formatCurrency(selectedBudget.amount_usd, "USD")}</p>
                                 )}
-                                {selectedBudget.amount_usd > 0 && selectedBudget.amount_cop > 0 && " · "}
                                 {selectedBudget.amount_cop > 0 && (
-                                    <span>Gastado {formatCurrency(selectedBudget.spent_cop, "COP")} de {formatCurrency(selectedBudget.amount_cop, "COP")}</span>
+                                    <p>Gastado {formatCurrency(selectedBudget.spent_cop, "COP")} de {formatCurrency(selectedBudget.amount_cop, "COP")}</p>
                                 )}
-                            </p>
+                            </div>
                         )}
-                    </DialogHeader>
+                    </FloatingPanelHeader>
                     <ScrollArea className="flex-1 -mx-6 px-6">
-                        <TransactionTable
-                            transactions={budgetTransactions}
-                            loading={txLoading}
-                            onEdit={() => {}}
-                            onDelete={() => {}}
-                        />
+                        <div className="overflow-x-auto">
+                            <TransactionTable
+                                transactions={budgetTransactions}
+                                loading={txLoading}
+                                onEdit={() => {}}
+                                onDelete={() => {}}
+                            />
+                        </div>
                     </ScrollArea>
-                </DialogContent>
-            </Dialog>
+                </FloatingPanelContent>
+            </FloatingPanel>
         </>
     )
 }

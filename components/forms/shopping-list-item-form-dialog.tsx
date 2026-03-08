@@ -10,11 +10,11 @@ import { useCategories } from "@/hooks/use-categories"
 import { toast } from "sonner"
 
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
+    FloatingPanel,
+    FloatingPanelContent,
+    FloatingPanelHeader,
+    FloatingPanelTitle,
+} from "@/components/ui/floating-panel"
 import {
     Form,
     FormControl,
@@ -137,11 +137,11 @@ export function ShoppingListItemFormDialog({
     }
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[450px]">
-                <DialogHeader>
-                    <DialogTitle>{isEditing ? "Editar item" : "Agregar item"}</DialogTitle>
-                </DialogHeader>
+        <FloatingPanel open={open} onOpenChange={onOpenChange}>
+            <FloatingPanelContent size="md">
+                <FloatingPanelHeader>
+                    <FloatingPanelTitle>{isEditing ? "Editar item" : "Agregar item"}</FloatingPanelTitle>
+                </FloatingPanelHeader>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <FormField
@@ -242,7 +242,7 @@ export function ShoppingListItemFormDialog({
                         </div>
                     </form>
                 </Form>
-            </DialogContent>
-        </Dialog>
+            </FloatingPanelContent>
+        </FloatingPanel>
     )
 }

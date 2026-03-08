@@ -8,11 +8,11 @@ import { useUser } from "@/hooks/use-user"
 import { toast } from "sonner"
 
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
+    FloatingPanel,
+    FloatingPanelContent,
+    FloatingPanelHeader,
+    FloatingPanelTitle,
+} from "@/components/ui/floating-panel"
 import {
     Form,
     FormControl,
@@ -121,11 +121,11 @@ export function CategoryFormDialog({
     }
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[450px]">
-                <DialogHeader>
-                    <DialogTitle>{isEditing ? "Editar categoria" : "Nueva categoria"}</DialogTitle>
-                </DialogHeader>
+        <FloatingPanel open={open} onOpenChange={onOpenChange}>
+            <FloatingPanelContent size="md">
+                <FloatingPanelHeader>
+                    <FloatingPanelTitle>{isEditing ? "Editar categoria" : "Nueva categoria"}</FloatingPanelTitle>
+                </FloatingPanelHeader>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <FormField
@@ -216,7 +216,7 @@ export function CategoryFormDialog({
                         </div>
                     </form>
                 </Form>
-            </DialogContent>
-        </Dialog>
+            </FloatingPanelContent>
+        </FloatingPanel>
     )
 }

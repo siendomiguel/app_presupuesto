@@ -16,13 +16,13 @@ import {
 } from '@/lib/services/csv-import';
 import { categoriesService } from '@/lib/services/categories';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
+  FloatingPanel,
+  FloatingPanelContent,
+  FloatingPanelHeader,
+  FloatingPanelTitle,
+  FloatingPanelDescription,
+  FloatingPanelFooter,
+} from '@/components/ui/floating-panel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -332,21 +332,21 @@ export function CSVImportDialog({ open, onOpenChange, onSuccess }: CSVImportDial
   const previewRows = rows.slice(0, 5);
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-6xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+    <FloatingPanel open={open} onOpenChange={handleClose}>
+      <FloatingPanelContent size="6xl">
+        <FloatingPanelHeader>
+          <FloatingPanelTitle className="flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5" />
             Importar CSV
-          </DialogTitle>
-          <DialogDescription>
+          </FloatingPanelTitle>
+          <FloatingPanelDescription>
             {step === 'upload' && 'Selecciona un archivo CSV con tus transacciones'}
             {step === 'preview' && 'Mapea las columnas y configura valores por defecto'}
             {step === 'resolve' && 'Algunas categorias del CSV no existen. Resuelvelas antes de importar.'}
             {step === 'importing' && 'Importando transacciones...'}
             {step === 'done' && 'Importacion completada'}
-          </DialogDescription>
-        </DialogHeader>
+          </FloatingPanelDescription>
+        </FloatingPanelHeader>
 
         {/* Step 1: Upload */}
         {step === 'upload' && (
@@ -703,7 +703,7 @@ export function CSVImportDialog({ open, onOpenChange, onSuccess }: CSVImportDial
           </div>
         )}
 
-        <DialogFooter>
+        <FloatingPanelFooter>
           {step === 'preview' && (
             <div className="flex gap-2 w-full justify-between">
               <Button variant="outline" onClick={reset}>
@@ -737,8 +737,8 @@ export function CSVImportDialog({ open, onOpenChange, onSuccess }: CSVImportDial
             </div>
           )}
           {step === 'done' && <Button onClick={() => handleClose(false)}>Cerrar</Button>}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </FloatingPanelFooter>
+      </FloatingPanelContent>
+    </FloatingPanel>
   );
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { budgetSchema, type BudgetFormValues } from "@/lib/validations/budget"
@@ -11,11 +11,11 @@ import { toast } from "sonner"
 import { format } from "date-fns"
 
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
+    FloatingPanel,
+    FloatingPanelContent,
+    FloatingPanelHeader,
+    FloatingPanelTitle,
+} from "@/components/ui/floating-panel"
 import {
     Form,
     FormControl,
@@ -60,8 +60,22 @@ export function BudgetFormDialog({
 
     const form = useForm<BudgetFormValues>({
         resolver: zodResolver(budgetSchema),
-        defaultValues: budget
-            ? {
+        defaultValues: {
+            name: "",
+            category_id: null,
+            amount_usd: 0,
+            amount_cop: 0,
+            period: "monthly",
+            start_date: "",
+            end_date: null,
+        },
+    })
+
+    // Reset form when dialog opens with budget data (edit) or empty (create)
+    useEffect(() => {
+        if (!open) return
+        if (budget) {
+            form.reset({
                 name: budget.name,
                 category_id: budget.category_id ?? null,
                 amount_usd: budget.amount_usd,
@@ -69,24 +83,19 @@ export function BudgetFormDialog({
                 period: budget.period,
                 start_date: budget.start_date,
                 end_date: budget.end_date,
-            }
-            : {
+            })
+        } else {
+            form.reset({
                 name: "",
                 category_id: null,
                 amount_usd: 0,
                 amount_cop: 0,
                 period: "monthly",
-                start_date: "",
+                start_date: format(new Date(), "yyyy-MM-dd"),
                 end_date: null,
-            },
-    })
-
-    // Set start_date on mount to avoid new Date() during SSR
-    const [initialized, setInitialized] = useState(false)
-    if (!initialized && !budget && open) {
-        form.setValue("start_date", format(new Date(), "yyyy-MM-dd"))
-        setInitialized(true)
-    }
+            })
+        }
+    }, [open, budget, form])
 
     const onSubmit = async (values: BudgetFormValues) => {
         if (!user) return
@@ -118,11 +127,11 @@ export function BudgetFormDialog({
     }
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                    <DialogTitle>{isEditing ? "Editar presupuesto" : "Nuevo presupuesto"}</DialogTitle>
-                </DialogHeader>
+        <FloatingPanel open={open} onOpenChange={onOpenChange}>
+            <FloatingPanelContent size="lg">
+                <FloatingPanelHeader>
+                    <FloatingPanelTitle>{isEditing ? "Editar presupuesto" : "Nuevo presupuesto"}</FloatingPanelTitle>
+                </FloatingPanelHeader>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <FormField
@@ -147,7 +156,7 @@ export function BudgetFormDialog({
                                     <FormLabel>Categoria (opcional)</FormLabel>
                                     <Select
                                         onValueChange={(val) => field.onChange(val === GENERAL_VALUE ? null : val)}
-                                        defaultValue={field.value ?? GENERAL_VALUE}
+                                        value={field.value ?? GENERAL_VALUE}
                                     >
                                         <FormControl>
                                             <SelectTrigger>
@@ -205,7 +214,7 @@ export function BudgetFormDialog({
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Periodo</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <Select onValueChange={field.onChange} value={field.value}>
                                         <FormControl>
                                             <SelectTrigger>
                                                 <SelectValue />
@@ -261,7 +270,7 @@ export function BudgetFormDialog({
                         </div>
                     </form>
                 </Form>
-            </DialogContent>
-        </Dialog>
+            </FloatingPanelContent>
+        </FloatingPanel>
     )
 }
